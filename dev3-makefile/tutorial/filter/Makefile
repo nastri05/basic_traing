@@ -18,3 +18,4 @@ $(filter %.result,$(obj_files)): %.result: %.raw
 
 clean:
 	rm -f *.c *.o *.raw
+#asdh
