@@ -5,4 +5,5 @@ int main(){
 	setFoo(5);
 	printf("New foo = %d\n", getFoo());
 	return 0;
+//
 }
