@@ -15,6 +15,7 @@ int main()
 		  printf(" Error \n");
 		  return -1;
 	  }
+	  
 	  //shmat to attach to shared memory
       shm = shmat(shmid, 0, 0);	  
       char *s = (char *) shm;
@@ -34,7 +35,7 @@ int main()
 		 // Append the number to the string
       }
 	  */
-	  strcat(s,"who are you \n");
+	  strcat(s,"who are you");
       //strcat(s, "\n");  /* Append newline */
       printf ("Child wrote < %s >\n",shm);
 	  //detach from memory

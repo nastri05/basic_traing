@@ -1,4 +1,3 @@
-#include<stdbool.h>
 #include"header.h"
 
 #ifndef SPEED_INIT
@@ -7,7 +6,7 @@
 
 int spd = SPEED_INIT;
 void main(){
-while(true){
+while(1){
 spd = SPEED_UP(spd);
 }
 }

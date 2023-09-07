@@ -2,7 +2,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-sem_t semP, semC;
+sem_t semP, semC; // initial key semaphore
 int stock_count = 0;
 const int stock_max_limit=5;
 

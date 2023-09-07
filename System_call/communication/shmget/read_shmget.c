@@ -13,6 +13,7 @@ int main() {
       /* Removed first call to wait as it held up parent process */
     shmid = shmget(2010, SHMSIZE, 0666 | IPC_CREAT);
     shm = (char*)shmat(shmid, 0, 0);
+    printf("Value of shmid : %d \n",shmid);
       //wait(NULL);
     printf ("Parent reads <%s>\n",shm) ;
 	  //detach from 

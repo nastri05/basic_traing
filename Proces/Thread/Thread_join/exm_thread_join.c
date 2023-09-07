@@ -9,7 +9,7 @@ void *myThreadFun(void *vargp)
 {
 	sleep(1);
 	printf("Printing GeeksQuiz from Thread %s \n" ,(char*)vargp);
-	return NULL;
+	pthread_exit(NULL);
 }
 
 int main()
@@ -18,9 +18,11 @@ int main()
 	printf("Before Thread\n");
 	pthread_create(&thread_id_1, NULL, myThreadFun, (char*)"hello_1");
 	pthread_create(&thread_id_2, NULL, myThreadFun, (char*)"hello_2");
-	//sleep(1);
-	pthread_join(thread_id_1, NULL);
-	pthread_join(thread_id_2, NULL);
 	printf("After Thread\n");
+	sleep(5);
+	while(1);
+	//printf(" return result thread 1 : %d \n ", pthread_join(thread_id_1, NULL));
+	//printf(" return result thread 2 : %d \n ", pthread_join(thread_id_2, NULL));
+	printf("What happend ?>??? \n");
 	exit(0);
 }

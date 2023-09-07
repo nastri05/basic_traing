@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "hmxcon_server.h": "c",
+        "hmxcms_linkedlist.h": "c"
+    }
+}

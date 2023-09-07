@@ -22,7 +22,7 @@ $(OBJ_dynamic):$(LIB_DYNAMIC)/libfoo.so
 	$(CC) $(FILE) -Ilib -L$(LIB_DYNAMIC) -lfoo -o $@
 
 $(LIB_DYNAMIC)/libfoo.so:
-	$(CC) -c lib/foo.c -o $(LIB_DYNAMIC)/libfoo.o
+	$(CC) -c -fPIC lib/foo.c -o $(LIB_DYNAMIC)/libfoo.o
 	$(CC) -shared $(LIB_DYNAMIC)/libfoo.o -o $(LIB_DYNAMIC)/libfoo.so
 
 clean:

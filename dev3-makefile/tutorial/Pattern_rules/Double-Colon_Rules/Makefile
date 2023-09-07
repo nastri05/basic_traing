@@ -3,5 +3,5 @@ all: blah
 blah:
 	echo "hello"
 
-blah:
+blah::
 	echo "hello again"
