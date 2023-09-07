@@ -11,9 +11,9 @@
 
 #ifdef DEBUG_LIST
 #define STR(x)   #x
-#define LOG(x) printf("[DEBUG] [%s]         %s = %s\n",__FUNCTION__,STR(x),x)
-#define LOG_INT(x) printf("[DEBUG] [%s]         %s = %d\n",__FUNCTION__,STR(x),x)
-#define LOG_STATE(x) printf("[DEBUG] [%s]   %s",__FUNCTION__, x)
+#define LOG(x) printf("[LIST] [%s]         %s = %s\n",__FUNCTION__,STR(x),x)
+#define LOG_INT(x) printf("[LIST] [%s]         %s = %d\n",__FUNCTION__,STR(x),x)
+#define LOG_STATE(x) printf("[LIST] [%s]   %s",__FUNCTION__, x)
 #else
 #define LOG(x)
 #define LOG_INT(x)

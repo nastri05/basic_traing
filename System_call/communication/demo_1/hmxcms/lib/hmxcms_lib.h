@@ -11,13 +11,13 @@
 #include <unistd.h>
 #include <limits.h>
 
-#define DEBUG_CLIENT_LIST
+#define DEBUG_LIB
 
-#ifdef DEBUG_CLIENT_LIST
+#ifdef DEBUG_LIB
 #define STR(x)   #x
-#define LOG_CLIENT(x) printf("[CLIENT] [%s]         %s = %s\n",__FUNCTION__,STR(x),x)
-#define LOG_CLIENT_INT(x) printf("[CLIENT] [%s]         %s = %d\n",__FUNCTION__,STR(x),x)
-#define LOG_CLIENT_STATE(x) printf("[CLIENT] [%s]   %s",__FUNCTION__, x)
+#define LOG_CLIENT(x) printf("[HMX_CMS_LIB] [%s]         %s = %s\n",__FUNCTION__,STR(x),x)
+#define LOG_CLIENT_INT(x) printf("[HMX_CMS_LIB] [%s]         %s = %d\n",__FUNCTION__,STR(x),x)
+#define LOG_CLIENT_STATE(x) printf("[HMX_CMS_LIB] [%s]   %s",__FUNCTION__, x)
 #else
 #define LOG_CLIENT(x)
 #define LOG_CLIENT_INT(x)
@@ -119,6 +119,13 @@ int cms_send(mqd_t mqdes, int tag, char* name_client, char* mq_name, int type, c
 /**
  * \brief Receive cms message
  * \param mqdes client message queue descriptor
+ * \param cms_msg cms received message
+ * \return CMS_SUCCESS/CMS_ERROR
+*/
+int cms_send_to_server(int tag, char *name_client, char *mq_name, int type, char *topic, char *data);
+
+/**
+ * \brief Receive cms message to server
  * \param cms_msg cms received message
  * \return CMS_SUCCESS/CMS_ERROR
 */

@@ -2,25 +2,27 @@
 
 mqd_t mqserver;
 
-// cms_msg_t response;
+
 
 int main ()
 {
+    cms_msg_t *response = (cms_msg_t*)malloc(sizeof( cms_msg_t));
     struct mq_attr* mq_attr = (struct mq_attr*)malloc(sizeof(mq_attr));
     // mqd_t mqclient = cms_client_init(mq_attr, "/Tuan", "mq1", SEND_REQUEST, "ALL");
     int mqd_client = cms_client_init(mq_attr,"name","/mqclient", SEND_REQUEST, "wan");
     if (mqd_client == CMS_ERROR) {
         printf("INIT FAIL %d \n",mqd_client);
     }
-    mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
-    if(mqserver == -1){
-        printf("Can not open send queue. Open failed or server not existed\n");
-        return mqserver;
+    
+    LOG_CLIENT_STATE("BAT DAU RECEIVE\n");
+    int i;
+    for( i=0 ; i <20 ; i++){
+    int result = cms_send_to_server(REQUEST_MESSAGE_GROUP, "name", "/mqclient", i, "wan", "sairoigg");
+    //cms_receive(mqd_client, response);
     }
-    //printf("number of mq_servat %d",mqserver);
-    int result = cms_send(mqserver, REQUEST_MESSAGE_GROUP, "name", "/mqclient", LOST_WAN, "wan", "sairoigg");
     //printf("result = %d\n",result);
-    mq_close(mqserver);
+    // mq_close(mqserver);
+    free(response);
     free(mq_attr);
     return 0;
     // cms_msg_t *msg = (cms_msg_t *) malloc (sizeof (cms_msg_t));

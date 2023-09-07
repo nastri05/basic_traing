@@ -1,7 +1,7 @@
 .PHONY: lib
 all :lib app
 #CC = /opt/trendchip/buildroot-gcc493_glibc222_arm32_32bServer/usr/bin/arm-buildroot-linux-gnueabi-gcc
-CC =gcc
+ CC =gcc
 lib:
 	gcc -c lib/hmxcms_linkedlist.c -o libstatic/libhmxcms_linkedlist.o
 	ar rcs libstatic/libhmxcms_linkedlist.a libstatic/libhmxcms_linkedlist.o

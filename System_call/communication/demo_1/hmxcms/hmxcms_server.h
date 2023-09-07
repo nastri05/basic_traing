@@ -10,7 +10,7 @@
 #include "lib/hmxcms_lib.h"
 #include "lib/hmxcms_linkedlist.h"
 
-#define MAX_THREADS 20
+#define MAX_THREADS 200
 #define DEBUG_SERVER_LIST
 
 #ifdef DEBUG_SERVER_LIST

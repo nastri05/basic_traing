@@ -234,7 +234,7 @@ int get_index_by_data(cms_client_t *head, data_t *data)
     int index = 0;
     while (tmp != NULL)
     {
-        if (strcmp(data->client_name, tmp->data->client_name) + strcmp(data->mq_name, tmp->data->mq_name) + strcmp(data->topic, tmp->data->topic) + ((data->type = tmp->data->type) ? 0 : 1) == 0)
+        if (strcmp(data->client_name, tmp->data->client_name) + strcmp(data->mq_name, tmp->data->mq_name) + strcmp(data->topic, tmp->data->topic) + ((data->type == tmp->data->type) ? 0 : 1) == 0)
         {
             LOG_STATE("---------------------------------\n");
             LOG_STATE("found data \n");
@@ -318,11 +318,10 @@ void print_list( cms_client_t *head_client){
         return;
     }
     int index = 0;
-    LOG_STATE("\n\n\n\n");
+    LOG_STATE("\n\n");
     LOG_STATE("Begin print list\n");
     while(tmp != NULL){
         LOG_STATE("---------------------------------\n");
-        LOG_INT(index);
         LOG_INT(get_type(tmp->data));
         LOG(get_client_name(tmp->data));
         LOG(get_mq_name(tmp->data));
@@ -331,7 +330,7 @@ void print_list( cms_client_t *head_client){
         LOG_STATE("---------------------------------\n");
         index++;
     }
-    LOG_STATE("End print list \n \n \n\n\n\n");
+    LOG_STATE("End print list \n\n");
     return;
 }
 

@@ -27,9 +27,9 @@ void *msg_handler(void *arg)
             if (strcmp(msg->payload.data, ADD_CLIENT) == 0) {
                 data_t *data = create_data(msg->payload.client_name, msg->payload.mq_name, msg->payload.type, msg->payload.topic);
                 index = get_index_by_data(head, data);
-                printf("%d\n", index);
+                LOG_CLIENT_INT(index);
                 if (index != CMS_ERROR) {
-                    printf("CLIENT ALREADY EXISTED\n");
+                    LOG_CLIENT_STATE("CLIENT ALREADY EXISTED\n");
                     mqdes = mq_open(msg->payload.mq_name, O_WRONLY);
                     cms_send(mqdes, RESPONSE_MESSAGE, "SERVER", SERVER_QUEUE_NAME, 0, "", CMS_CONFIG_SUCCESS);
                     mq_close(mqdes);
@@ -37,11 +37,11 @@ void *msg_handler(void *arg)
                     mqdes = mq_open(msg->payload.mq_name, O_WRONLY);
                     if (add_client(&head, data) == CMS_ERROR) {
                         //fail
-                        printf("ADD CLIENT TO LINKED LIST FAIL\n");
+                        LOG_CLIENT_STATE("ADD CLIENT TO LINKED LIST FAIL\n");
                         cms_send(mqdes, RESPONSE_MESSAGE, "SERVER", SERVER_QUEUE_NAME, 0, "", CMS_CONFIG_FAIL);
                     } else {
                         //success
-                        printf("ADD CLIENT TO LINKED LIST SUCCESS\n");
+                        LOG_CLIENT_STATE("ADD CLIENT TO LINKED LIST SUCCESS\n");
                         cms_send(mqdes, RESPONSE_MESSAGE, "SERVER", SERVER_QUEUE_NAME, 0, "", CMS_CONFIG_SUCCESS);
                     }
                     mq_close(mqdes);
@@ -51,46 +51,48 @@ void *msg_handler(void *arg)
                 data_t *data = create_data(msg->payload.client_name, msg->payload.mq_name, msg->payload.type, msg->payload.topic);
                 index = get_index_by_name(head, msg->payload.client_name);
                 if (index == CMS_ERROR) {
-                    printf("ERROR: CLIENT NOT FOUND!\n");
+                    LOG_CLIENT_STATE("ERROR: CLIENT NOT FOUND!\n");
                     pthread_mutex_unlock(&cms_mutex);
                     break;
                 }
                 mqdes = mq_open(msg->payload.mq_name, O_WRONLY);
                 if (change_data_client(&head, index, data) == CMS_ERROR) {
                     //fail
-                    printf("CHANGE DATA OF CLIENT IN LINKED LIST FAIL\n");
+                    LOG_CLIENT_STATE("CHANGE DATA OF CLIENT IN LINKED LIST FAIL\n");
                     cms_send(mqdes, RESPONSE_MESSAGE, "SERVER", SERVER_QUEUE_NAME, 0, "", CMS_CONFIG_FAIL);
                 } else {
                     //success
-                    printf("CHANGE DATA OF CLIENT IN LINKED LIST SUCCESS\n");
+                    LOG_CLIENT_STATE("CHANGE DATA OF CLIENT IN LINKED LIST SUCCESS\n");
                     cms_send(mqdes, RESPONSE_MESSAGE, "SERVER", SERVER_QUEUE_NAME, 0, "", CMS_CONFIG_SUCCESS);
                 }
                 mq_close(mqdes);
             } else if (strcmp(msg->payload.data, REMOVE_CLIENT) == 0) {
                 index = get_index_by_name(head, msg->payload.client_name);
                 if (index == CMS_ERROR) {
-                    printf("ERROR: CLIENT NOT FOUND!\n");
+                    LOG_CLIENT_STATE("ERROR: CLIENT NOT FOUND!\n");
                     pthread_mutex_unlock(&cms_mutex);
                     break;
                 } else {
                     mqdes = mq_open(msg->payload.mq_name, O_WRONLY);
                     if (delete_client(&head, index) == CMS_ERROR) {
-                        printf("REMOVE CLIENT FAIL\n");
+                        LOG_CLIENT_STATE("REMOVE CLIENT FAIL\n");
                         cms_send(mqdes, RESPONSE_MESSAGE, "SERVER", SERVER_QUEUE_NAME, 0, "", CMS_CONFIG_FAIL);
                     } else {
-                        printf("REMOVE CLIENT SUCCESS\n");
+                        LOG_CLIENT_STATE("REMOVE CLIENT SUCCESS\n");
                         cms_send(mqdes, RESPONSE_MESSAGE, "SERVER", SERVER_QUEUE_NAME, 0, "", CMS_CONFIG_SUCCESS);
                     }
                     mq_close(mqdes);
                 }
             }
+            print_list(head);
             pthread_mutex_unlock(&cms_mutex);
             break;
         case (REQUEST_MESSAGE_CLIENT):
             //request message to destination client
+            LOG_CLIENT_STATE("???\n");
             index = get_index_by_name(head, msg->payload.topic);
             if (index == CMS_ERROR) {
-                printf("ERROR: CLIENT NOT FOUND!\n");
+                LOG_CLIENT_STATE("ERROR: CLIENT NOT FOUND!\n");
                 break;
             }
             data_t *data = get_data_by_index(head, index);
@@ -115,9 +117,10 @@ void *msg_handler(void *arg)
             break;
         case (REQUEST_MESSAGE_GROUP) :
             //request message to group
+            LOG_CLIENT_STATE("??? REQUEST_MESSAGE_GROUP\n");
             num_member = get_index_by_topic(head, msg->payload.topic, index_gr);
             if (num_member == CMS_ERROR) {
-                printf("ERROR: CLIENT NOT FOUND!\n");
+                LOG_CLIENT_STATE("ERROR: CLIENT NOT FOUND!\n");
                 break;
             }
             for (i = 0; i < num_member; i++)
@@ -127,6 +130,7 @@ void *msg_handler(void *arg)
                 retvl += cms_send(mqdes, REQUEST_MESSAGE_GROUP, msg->payload.client_name, msg->payload.mq_name, msg->payload.type, msg->payload.topic, msg->payload.data);
                 mq_close(mqdes);
             }
+             LOG_CLIENT_STATE("??? REQUEST_MESSAGE_GROUP\n");
             //response message to source client
             mqsrc = mq_open(msg->payload.mq_name, O_WRONLY);
             if (retvl == CMS_SUCCESS)
@@ -156,7 +160,6 @@ void *msg_handler(void *arg)
             break;
     }
     num_thread--;
-    print_list(head);
     pthread_exit(NULL);
 }
 
@@ -166,12 +169,13 @@ int create_handling_pthread(cms_msg_t *msg)
     int ret;
     ret = pthread_create(&thread_id, NULL, msg_handler, (void *)msg);
     if (ret) {
-        printf("ERROR: CREATING THREAD FAIL, RETURN CODE: %d \n", ret);
+        LOG_CLIENT_STATE("ERROR: CREATING THREAD FAIL");
+        LOG_CLIENT_INT(ret);
     }
     //pthread_join(thread_id, NULL);
     ret = pthread_detach(thread_id);
     if (ret) {
-        printf("ERROR: THREAD DETACH FAIL\n");
+        LOG_CLIENT_STATE("ERROR: THREAD DETACH FAIL\n");
     }
     num_thread++;
 }
@@ -192,7 +196,7 @@ mqd_t cms_server_init()
     mq_unlink(SERVER_QUEUE_NAME);
     mqd = mq_open(SERVER_QUEUE_NAME, O_RDWR| O_CREAT, 0666, &attr);
     if (mqd == -1) {
-        printf("Create server message queue fail\n");
+        LOG_CLIENT_STATE("Create server message queue fail\n");
         return -1;
     }
     return mqd;
@@ -203,16 +207,16 @@ void cms_server_start()
     while (num_thread < MAX_THREADS)
     {
         //printf("giatri \n");
-        sleep(1);
+        //sleep(1);
         int read = cms_receive(mqd, &msg_b);
         if (read < 0) {
-            printf("Can not receive message from server queue \n");
+            LOG_CLIENT_STATE("Can not receive message from server queue \n");
         } else {
             cms_msg_t msgtest = msg_b;
             //printf(" gia tri %d %s\n", msg_b.tag, msg_b.payload.client_name);
             if (create_handling_pthread(&msgtest) == CMS_ERROR)
             {
-                printf("Create thread fail\n");
+                LOG_CLIENT_STATE("Create thread fail\n");
             }
         }
     }
@@ -228,7 +232,8 @@ void cms_server_stop()
 
 int main ()
 {
-    printf("mqserver id %d\n", cms_server_init());
+    LOG_CLIENT_STATE("mqserver id :");
+    LOG_CLIENT_INT(cms_server_init());
     cms_server_start();
     //cms_server_stop();
     return 0;
