@@ -7,23 +7,34 @@ mqd_t mqserver;
 int main ()
 {
     cms_msg_t *response = (cms_msg_t*)malloc(sizeof( cms_msg_t));
-    struct mq_attr* mq_attr = (struct mq_attr*)malloc(sizeof(mq_attr));
+    struct mq_attr mq_attr = create_attr(0,10,sizeof(cms_msg_t));
     // mqd_t mqclient = cms_client_init(mq_attr, "/Tuan", "mq1", SEND_REQUEST, "ALL");
-    int mqd_client = cms_client_init(mq_attr,"name","/mqclient", SEND_REQUEST, "wan");
+    int mqd_client = init_client(&mq_attr,"name_1");
     if (mqd_client == CMS_ERROR) {
         printf("INIT FAIL %d \n",mqd_client);
     }
-    
     LOG_CLIENT_STATE("BAT DAU RECEIVE\n");
-    int i;
-    for( i=0 ; i <20 ; i++){
-    int result = cms_send_to_server(REQUEST_MESSAGE_GROUP, "name", "/mqclient", i, "wan", "sairoigg");
-    //cms_receive(mqd_client, response);
-    }
+    int result = send_to()
+    // while(1){
+    // int i = 0;
+    //     for( i=0 ; i <10 ; i++){
+    //         int result = cms_send_to_server(REQUEST_MESSAGE_GROUP, "name", "/mqclient", i, "wan", "gui den group");
+    //         cms_receive(mqd_client, response);
+    //         result = cms_send_to_server(REQUEST_MESSAGE_ALL, "name", "/mqclient", i, "wan", "gui den all");
+    //         while(1){
+    //             cms_receive(mqd_client, response);
+    //             if(strcmp(response->payload.data,CMS_SEND_SUCCESS)==0 ||
+    //                 strcmp(response->payload.data,CMS_SEND_FAIL)==0){
+    //                 LOG_CLIENT(response->payload.data);
+    //                 break;
+    //                 }
+    //             }
+    //         }
+    //         sleep(2);
+    // }
     //printf("result = %d\n",result);
     // mq_close(mqserver);
     free(response);
-    free(mq_attr);
     return 0;
     // cms_msg_t *msg = (cms_msg_t *) malloc (sizeof (cms_msg_t));
     // attr.mq_flags = 0;

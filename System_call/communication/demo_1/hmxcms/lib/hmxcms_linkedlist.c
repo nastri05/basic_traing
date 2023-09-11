@@ -1,11 +1,9 @@
 #include"hmxcms_linkedlist.h"
 
 
-data_t *create_data(char * client_name, char * mq_client, int type, char * topic){
+data_t *create_data(char * client_name, char * topic){
     data_t * data_client = (data_t*) malloc(sizeof(data_t));
     strcpy(data_client->client_name,client_name);
-    strcpy(data_client->mq_name,mq_client);
-    data_client->type = type;
     strcpy(data_client->topic,topic);
     return data_client;
 }
@@ -13,16 +11,6 @@ data_t *create_data(char * client_name, char * mq_client, int type, char * topic
 
 char *get_client_name(data_t * data){
     return data->client_name;
-}
-
-
-char *get_mq_name(data_t * data){
-    return data->mq_name;
-}
-
-
-int  get_type(data_t * data){
-    return data->type;
 }
 
 
@@ -68,9 +56,9 @@ int add_client( cms_client_t ** head_client , data_t * data){
 }
 
 
-int delete_client( cms_client_t ** head_clien , int index){
-    cms_client_t * tmp = *head_clien;
-    
+int delete_client( cms_client_t ** head_client , int index){
+    cms_client_t * tmp = *head_client;
+    int length_list = get_length_list(*head_client);
     if(tmp == NULL){
         LOG_STATE("---------------------------------\n");
         LOG_STATE("List is NULL \n");
@@ -79,7 +67,7 @@ int delete_client( cms_client_t ** head_clien , int index){
     }
     // header of list
     if(index == 0){
-        *head_clien = (*head_clien)->next;
+        *head_client = (*head_client)->next;
         LOG_STATE("---------------------------------\n");
         LOG_STATE("Delete complete \n");
         printf_data(tmp->data);
@@ -87,45 +75,37 @@ int delete_client( cms_client_t ** head_clien , int index){
         free(tmp->data);
         free(tmp);
         return CMS_SUCCESS;
-    }
-    int i ;
-    for(i = 0 ; i < index-1 ; i ++){
-        if(tmp->next != NULL)
-        {
-            tmp = tmp->next;
-            
-        }else{
-            LOG_STATE("---------------------------------\n");
-            LOG_STATE("Index out length list\n");
-            LOG_STATE("---------------------------------\n");
-            return CMS_ERROR;
-        }
-    }
-    cms_client_t * delete = NULL;
-    if(tmp->next == NULL){
+    } else if(index >= length_list){
         LOG_STATE("---------------------------------\n");
         LOG_STATE("Index out length list\n");
         LOG_STATE("---------------------------------\n");
         return CMS_ERROR;
-    }else{
-        delete = tmp->next;
-        tmp->next = delete->next;
-        LOG_STATE("---------------------------------\n");
-        LOG_STATE("Delete complete \n");
-        printf_data(delete->data);
-        LOG_STATE("---------------------------------\n");
-        free(delete->data);
-        free(delete);
+    } 
+    int i ;
+    for(i = 0 ; i < index-1 ; i ++){
+        tmp = tmp->next;
     }
+    cms_client_t * delete = tmp->next;
+    if(index == length_list -1){ // tail of list
+        tmp->next = NULL;
+    }else{
+        tmp->next = delete->next;
+    }
+    LOG_STATE("---------------------------------\n");
+    LOG_STATE("Delete complete \n");
+    LOG_INT(index);
+    printf_data(delete->data);
+    LOG_STATE("---------------------------------\n");
+    free(delete->data);
+    free(delete);
+
     return CMS_SUCCESS;
 }
 
 
-void set_data(data_t * destination, data_t * source){
+void change_data(data_t * destination, data_t * source){
     strcpy(destination->client_name,source->client_name);
-    strcpy(destination->client_name,source->client_name);
-    strcpy(destination->client_name,source->client_name);
-    destination->type = source->type;
+    strcpy(destination->topic,source->topic);
 }
 
 void printf_data(data_t * data){
@@ -137,9 +117,7 @@ void printf_data(data_t * data){
     }
     LOG_STATE("Print value in data \n");
     LOG_STATE("---------------------------------\n");
-    LOG_INT(get_type(data));
     LOG(get_client_name(data));
-    LOG(get_mq_name(data));
     LOG(get_topic(data));
     LOG_STATE("---------------------------------\n");
 }
@@ -163,7 +141,7 @@ int change_data_client( cms_client_t ** head_client, int index, data_t * data){
             return CMS_ERROR;
         }
     }
-    set_data(tmp->data,data);
+    change_data(tmp->data,data);
     LOG_STATE("---------------------------------\n");
     LOG_STATE("Change data in client complete \n");
     LOG_STATE("---------------------------------\n");
@@ -178,8 +156,7 @@ int get_index_by_topic(cms_client_t *head_client, char *topic, int *result){
     int index = 0;
     while(tmp != NULL){
         // temporarily treat the value of the receive type as 1
-        if(strncmp(get_topic(tmp->data),topic,strlen(get_topic(tmp->data)))==0 &&
-            (get_type(tmp->data) == RECEIVE_REQUEST))
+        if(strcmp(get_topic(tmp->data),topic)==0)
         {
             result[size_arr] = index;
             size_arr++;
@@ -213,7 +190,7 @@ int get_index_by_name(cms_client_t *head_client, char *client_name){
     int index = 0;
     while (tmp != NULL)
     {
-        if(strncmp(get_client_name(tmp->data),client_name,strlen(get_client_name(tmp->data)))==0){
+        if(strcmp(get_client_name(tmp->data),client_name)==0){
             LOG_STATE("---------------------------------\n");
             LOG_STATE("found client name \n");
             LOG_STATE("---------------------------------\n");
@@ -234,7 +211,8 @@ int get_index_by_data(cms_client_t *head, data_t *data)
     int index = 0;
     while (tmp != NULL)
     {
-        if (strcmp(data->client_name, tmp->data->client_name) + strcmp(data->mq_name, tmp->data->mq_name) + strcmp(data->topic, tmp->data->topic) + ((data->type == tmp->data->type) ? 0 : 1) == 0)
+        if (strcmp(get_client_name(data), get_client_name(tmp->data))== 0 &&
+            strcmp(get_topic(data), get_topic(tmp->data)) == 0 )
         {
             LOG_STATE("---------------------------------\n");
             LOG_STATE("found data \n");
@@ -255,7 +233,7 @@ data_t *get_data_by_name(cms_client_t *head_client, char * client_name){
     cms_client_t * tmp = head_client;
     while (tmp != NULL)
     {
-        if(strncmp(get_client_name(tmp->data),client_name,strlen(get_client_name(tmp->data)))==0){
+        if(strcmp(get_client_name(tmp->data),client_name)==0){
             LOG_STATE("---------------------------------\n");
             LOG_STATE("found client name completed \n");
             LOG_STATE("---------------------------------\n");            
@@ -295,9 +273,10 @@ data_t *get_data_by_index(cms_client_t *head_client, int index){
 void free_list(cms_client_t **head_client){
     cms_client_t * tmp = *head_client;
     if(tmp == NULL){
-    LOG_STATE("---------------------------------\n");
-    LOG_STATE("List is empty \n");
-    LOG_STATE("---------------------------------\n");        
+        LOG_STATE("---------------------------------\n");
+        LOG_STATE("List is NULL  \n");
+        LOG_STATE("---------------------------------\n");
+        return ;    
     }
     while (tmp != NULL)
     {
@@ -314,7 +293,7 @@ void free_list(cms_client_t **head_client){
 void print_list( cms_client_t *head_client){
     cms_client_t * tmp = head_client;
     if(tmp == NULL){
-        LOG_STATE("List empty \n");
+        LOG_STATE("List is NULL \n");
         return;
     }
     int index = 0;
@@ -322,9 +301,8 @@ void print_list( cms_client_t *head_client){
     LOG_STATE("Begin print list\n");
     while(tmp != NULL){
         LOG_STATE("---------------------------------\n");
-        LOG_INT(get_type(tmp->data));
+        LOG_INT(index);
         LOG(get_client_name(tmp->data));
-        LOG(get_mq_name(tmp->data));
         LOG(get_topic(tmp->data));
         tmp = tmp->next;
         LOG_STATE("---------------------------------\n");
@@ -338,58 +316,73 @@ void print_list( cms_client_t *head_client){
 //     cms_client_t *list_client = NULL;
 //     print_list(list_client);
 //     free_list(&list_client);
-//     data_t *data = create_data("hoangtuan","hoangtuan_mq",1,"wan");
+    
+//     data_t *data = create_data("hoangtuan","wan");
 //     int result = add_client(&list_client,data);
 //     // print_list(list_client);
 //     // LOG_STATE("Value of result : \n");
 //     // LOG_INT(result);
-//     data = create_data("pog3","pog3_mq",3,"wifi");
+//     data = create_data("pog3","wifi");
 //     result = add_client(&list_client,data);
-//     data = create_data("dante","dante_mq",2,"wan");
+    
+//     data = create_data("dante","wan");
 //     result = add_client(&list_client,data);
-//     data = create_data("hxtuan","htx_mq",3,"wan");
+    
+//     data = create_data("hxtuan","wan");
 //     result = add_client(&list_client,data);
-//     // print_list(list_client);
-//     // LOG_STATE("Value of result : \n");
+    
+//     data = create_data("dante_hoang","wifi");
+//     result = add_client(&list_client,data);
+    
+//     data = create_data("ricon","PON");
+//     result = add_client(&list_client,data);
+
+//     data = create_data("Nhabao(nguoiY)","wifi");
+//     result = add_client(&list_client,data);
+
+//     data = create_data("sol7","wan");
+//     result = add_client(&list_client,data);
+
+//     print_list(list_client);
+//     int length = get_length_list(list_client);
+//     LOG_INT(get_length_list(list_client));
+//     // int i;
+    
+//     print_list(list_client);
+//     // data = create_data("sol7","wan");
+//     // result = add_client(&list_client,data);
+//     // result = get_index_by_name(list_client, "pog3");
+    
+//     // LOG_STATE("Value of result get_index_by_name : \n");
 //     // LOG_INT(result);
-//     data = create_data("dante_hoang","dante_hoang_mq",2,"wifi");
-//     result = add_client(&list_client,data);
-    
-//     data = create_data("ricon","ricon_mq",1,"wifi");
-//     result = add_client(&list_client,data);
 
-//     data = create_data("Nhabao(nguoiY)","truong_anhNgok_mq",3,"wifi");
-//     result = add_client(&list_client,data);
-
-//     data = create_data("sol7","sol7_mq",3,"wan");
-//     result = add_client(&list_client,data);
-
-//     result = delete_client(&list_client,8);
-    
-//     result = get_index_by_name(list_client, "dante_hoang");
-    
-//     LOG_STATE("Value of result get_index_by_name : \n");
-//     LOG_INT(result);
-
-//     print_list(list_client);
-
-//     result = get_length_list(list_client);
-//     LOG_STATE("Length of list\n");
-//     LOG_INT(result);
-//     int result_arr[result];
-//     result = get_index_by_topic(list_client,"wan", result_arr);
-//     LOG_STATE("Length of result_arr\n");
-//     LOG_INT(result);
-//     int i;
-//     for(i = 0; i < result ;i++){
-//         LOG_INT(result_arr[i]);
-//         data = get_data_by_index(list_client,result_arr[i]);
-//         printf_data(data);
-//     }
-//     print_list(list_client);
-//     data = get_data_by_name(list_client,"sol7");
-//     //data = create_data("Nhabao(nguoiY)","truong_anhNgok_mq",3,"wifi");
+//     // print_list(list_client);
+//     // data_t *data_tmp = create_data("mck","rapital");
+//     // change_data_client(&list_client,result,data_tmp);
+//     //print_list(list_client);
+//     // result = get_length_list(list_client);
+//     // LOG_STATE("Length of list\n");
+//     // LOG_INT(result);
+//     // int result_arr[result];
+//     // data = create_data("hoangtuan","wan");
+//     // result = get_index_by_data(list_client,data);
+//     // LOG_STATE("Length of result_arr\n");
+//     // LOG_INT(result);
+//     int i ;
+//     for(i = 0; i < length;i++){
+//     data = get_data_by_index(list_client,i);
 //     printf_data(data);
+//     }
+//     // int i;
+//     // for(i = 0; i < result ;i++){
+//     //     LOG_INT(result_arr[i]);
+//     //     data = get_data_by_index(list_client,result_arr[i]);
+//     //     printf_data(data);
+//     // }
+//     // print_list(list_client);
+//     // data = get_data_by_name(list_client,"pog3");
+//     // //data = create_data("Nhabao(nguoiY)","truong_anhNgok_mq",3,"wifi");
+//     //printf_data(data);
 //     free_list(&list_client);
 //     /* test delete_client*/
 //     // result = delete_client(&list_client,1);

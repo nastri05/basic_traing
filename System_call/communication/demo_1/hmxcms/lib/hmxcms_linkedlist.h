@@ -4,11 +4,11 @@
 #include <string.h>
 #include "hmxcms_lib.h"
 
+
 #define CMS_SUCCESS     0
 #define CMS_ERROR       -1
 
 #define DEBUG_LIST
-
 #ifdef DEBUG_LIST
 #define STR(x)   #x
 #define LOG(x) printf("[LIST] [%s]         %s = %s\n",__FUNCTION__,STR(x),x)
@@ -21,10 +21,8 @@
 #endif
 
 typedef struct data_t{
-    char client_name[64];
-    char mq_name[64];
-    int type;
-    char topic[64];
+    char client_name[MAX_NAME_LENGTH];
+    char topic[MAX_NAME_LENGTH];
 } data_t;
 
 
@@ -36,12 +34,10 @@ typedef struct cms_client_t{
 /*
 @brief create pointer data_t with informations in it
 @param client_name is name of client that user want to name
-@param mq_client is name of client's server that user want to name
-@param type is the type in which the client wants to operate RECEIVE_REQUEST or SEND_REQUEST
 @param topic is name topic that client want send or receive from it
 @return the pointer data_t contains the information that was passed into it
 */
-data_t *create_data(char * client_name, char * mq_client, int type, char * topic);
+data_t *create_data(char * client_name, char * topic);
 
 /*
 @brief get client name form data
@@ -55,20 +51,7 @@ char *get_client_name(data_t * data);
 @param data contains information
 @return mq name
 */
-char *get_mq_name(data_t * data);
 
-/*
-@brief get type form data
-@param data contains information
-@return type
-*/
-int  get_type(data_t * data);
-
-/*
-@brief get topic from data
-@param data contains information
-@return topic
-*/
 char *get_topic(data_t * data);
 
 /*
@@ -77,7 +60,7 @@ char *get_topic(data_t * data);
 @param source is data contains information want change into destination
 @return void
 */
-void set_data(data_t * destination, data_t * source);
+void change_data(data_t * destination, data_t * source);
 
 /*
 @brief print informations in data

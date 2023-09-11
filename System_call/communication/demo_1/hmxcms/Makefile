@@ -30,5 +30,5 @@ lib_dynamic:
 app_dynamic:
 	$(CC) hmxcms_server.c -Ilib -Llibdynamic -Llibdynamic -lhmxcms -o libdynamic/server -pthread -lrt 
 	$(CC) hmxcms_client.c -Ilib -Llibdynamic -lhmxcms -o libdynamic/client -pthread -lrt
-	$(CC) hmxcms_client_receive.c -Ilib -Llibdynamic -lhmxcms -o libdynamic/client_receive -pthread -lrt
+	$(CC) hmxcms_client_receive.c -Ilib -Llibdynamic -lhmxcms -o libdynamic/client_receive_2 -pthread -lrt
 
