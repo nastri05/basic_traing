@@ -11,33 +11,7 @@ pthread_mutex_t cms_mutex;
 int num_thread = 0;
 cms_client_t *head = NULL;
 
-int cms_send(mqd_t mqdes, int tag, char *name_client, char *mq_name, int type, char *topic, char *data){
-    cms_msg_t msg ;
-    // = (cms_msg_t*) malloc(sizeof(cms_msg_t));
-    create_msg(&msg, tag, name_client, mq_name, type, topic, data);
 
-    if(mq_send(mqdes, (char *) &msg, sizeof(cms_msg_t), 0)==-1) {
-        printf(" mq send error\n");
-        return CMS_ERROR;
-    }
-    return CMS_SUCCESS;
-}
-
-int cms_receive(mqd_t mqdes, cms_msg_t* cms_msg){
-    int ret = mq_receive(mqdes, (char *) cms_msg, sizeof(cms_msg_t), NULL);
-    return (ret == -1) ? CMS_ERROR : ret;
-};
-
-int create_msg(cms_msg_t* msg, int tag, char* name_client, char* mq_name, int type, char* topic, char* data){
-    msg->tag = tag;
-    strcpy(msg->payload.client_name, name_client);
-    strcpy(msg->payload.mq_name, mq_name);
-    msg->payload.type = type;
-    strcpy(msg->payload.topic, topic);
-    strcpy(msg->payload.data, data);
-    msg->length = sizeof(msg->payload);
-    return CMS_SUCCESS;
-}
 
 
 void *msg_handler(void *arg)

@@ -1,26 +1,26 @@
 #include"hmxcms_linkedlist.h"
 
 
-data_t *create_data(char * client_name, char * topic){
-    data_t * data_client = (data_t*) malloc(sizeof(data_t));
+cms_data_t *create_data(char * client_name, char * topic){
+    cms_data_t * data_client = (cms_data_t*) malloc(sizeof(cms_data_t));
     strcpy(data_client->client_name,client_name);
     strcpy(data_client->topic,topic);
     return data_client;
 }
 
 
-char *get_client_name(data_t * data){
+char *get_client_name(cms_data_t * data){
     return data->client_name;
 }
 
 
-char *get_topic(data_t * data){
+char *get_topic(cms_data_t * data){
     return data->topic;
 }
 
 
 
-cms_client_t * create_client( data_t * data){
+cms_client_t * create_client( cms_data_t * data){
     cms_client_t * new_client = ( cms_client_t*) malloc(sizeof( cms_client_t));
     new_client->data = data;
     new_client->next = NULL;
@@ -28,7 +28,7 @@ cms_client_t * create_client( data_t * data){
 }
 
 
-int add_client( cms_client_t ** head_client , data_t * data){
+int add_client( cms_client_t ** head_client , cms_data_t * data){
     cms_client_t * new_client = create_client(data);
     if(new_client == NULL){
         LOG_STATE("---------------------------------\n");
@@ -103,12 +103,12 @@ int delete_client( cms_client_t ** head_client , int index){
 }
 
 
-void change_data(data_t * destination, data_t * source){
+void change_data(cms_data_t * destination, cms_data_t * source){
     strcpy(destination->client_name,source->client_name);
     strcpy(destination->topic,source->topic);
 }
 
-void printf_data(data_t * data){
+void printf_data(cms_data_t * data){
     if(data == NULL){
         LOG_STATE("---------------------------------\n");
         LOG_STATE("Data is NULL \n");
@@ -121,7 +121,7 @@ void printf_data(data_t * data){
     LOG(get_topic(data));
     LOG_STATE("---------------------------------\n");
 }
-int change_data_client( cms_client_t ** head_client, int index, data_t * data){
+int change_data_client( cms_client_t ** head_client, int index, cms_data_t * data){
     cms_client_t * tmp = *head_client;
     if(tmp == NULL){
         LOG_STATE("List is NULL \n");
@@ -205,7 +205,7 @@ int get_index_by_name(cms_client_t *head_client, char *client_name){
     return CMS_ERROR;
 }
 
-int get_index_by_data(cms_client_t *head, data_t *data) 
+int get_index_by_data(cms_client_t *head, cms_data_t *data) 
 {
     cms_client_t *tmp = head;
     int index = 0;
@@ -229,7 +229,7 @@ int get_index_by_data(cms_client_t *head, data_t *data)
 }
 
 
-data_t *get_data_by_name(cms_client_t *head_client, char * client_name){
+cms_data_t *get_data_by_name(cms_client_t *head_client, char * client_name){
     cms_client_t * tmp = head_client;
     while (tmp != NULL)
     {
@@ -247,7 +247,7 @@ data_t *get_data_by_name(cms_client_t *head_client, char * client_name){
     return NULL;
 }
 
-data_t *get_data_by_index(cms_client_t *head_client, int index){
+cms_data_t *get_data_by_index(cms_client_t *head_client, int index){
     cms_client_t * tmp = head_client;
     if(tmp == NULL){
             LOG_STATE("---------------------------------\n");
@@ -312,12 +312,41 @@ void print_list( cms_client_t *head_client){
     return;
 }
 
+// nhet tam thoi
+// int cms_send(mqd_t mqdes, int tag, char *name_client, char *mq_name, int type, char *topic, char *data){
+//     cms_msg_t msg ;
+//     // = (cms_msg_t*) malloc(sizeof(cms_msg_t));
+//     create_msg(&msg, tag, name_client, mq_name, type, topic, data);
+
+//     if(mq_send(mqdes, (char *) &msg, sizeof(cms_msg_t), 0)==-1) {
+//         printf(" mq send error\n");
+//         return CMS_ERROR;
+//     }
+//     return CMS_SUCCESS;
+// }
+
+// int cms_receive(mqd_t mqdes, cms_msg_t* cms_msg){
+//     int ret = mq_receive(mqdes, (char *) cms_msg, sizeof(cms_msg_t), NULL);
+//     return (ret == -1) ? CMS_ERROR : ret;
+// };
+
+// int create_msg(cms_msg_t* msg, int tag, char* name_client, char* mq_name, int type, char* topic, char* data){
+//     msg->tag = tag;
+//     strcpy(msg->payload.client_name, name_client);
+//     strcpy(msg->payload.mq_name, mq_name);
+//     msg->payload.type = type;
+//     strcpy(msg->payload.topic, topic);
+//     strcpy(msg->payload.data, data);
+//     msg->length = sizeof(msg->payload);
+//     return CMS_SUCCESS;
+// }
+
 // int main(){
 //     cms_client_t *list_client = NULL;
 //     print_list(list_client);
 //     free_list(&list_client);
     
-//     data_t *data = create_data("hoangtuan","wan");
+//     cms_data_t *data = create_data("hoangtuan","wan");
 //     int result = add_client(&list_client,data);
 //     // print_list(list_client);
 //     // LOG_STATE("Value of result : \n");
@@ -357,8 +386,8 @@ void print_list( cms_client_t *head_client){
 //     // LOG_INT(result);
 
 //     // print_list(list_client);
-//     // data_t *data_tmp = create_data("mck","rapital");
-//     // change_data_client(&list_client,result,data_tmp);
+//     // cms_data_t *cms_data_tmp = create_data("mck","rapital");
+//     // change_data_client(&list_client,result,cms_data_tmp);
 //     //print_list(list_client);
 //     // result = get_length_list(list_client);
 //     // LOG_STATE("Length of list\n");

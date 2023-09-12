@@ -32,15 +32,15 @@
 
 
 // Define response data
-#define CMS_CONFIG_SUCCESS       "config_success"
-#define CMS_CONFIG_FAIL          "config_fail"
-#define CMS_SEND_SUCCESS         "send_success"
-#define CMS_SEND_FAIL            "send_fail"
-// Define config data
-#define ADD_CLIENT               "add"
-#define REMOVE_CLIENT            "remove"
-#define CHANGE_CLIENT            "change"
+#define CMS_RECEIVE_SUCCESS       "CMS_SUBCRIBE_SUCCESS"
+#define CMS_RECEIVE_FAIL          "CMS_RECEIVE_FAIL"
+#define CMS_SUBCRIBE_SUCCESS      "CMS_SUBCRIBE_SUCCESS"
+#define CMS_SUBCRIBE_FAIL         "CMS_SUBCRIBE_FAIL"
+#define CMS_UNSUBCRIBE_SUCCESS    "CMS_SUBCRIBE_SUCCESS"  
+#define CMS_UNSUBCRIBE_FAIL       "CMS_UNSUBCRIBE_FAIL"  
 
+
+#define MAX_NAME_LENGTH         32
 
 
 #define CMS_SUCCESS              0
@@ -53,7 +53,7 @@ enum TAG_MESSAGE {
     SEND,
     SEND_TO,
     RESPONSE_MESSAGE
-}
+};
 
 
 /**
@@ -70,21 +70,27 @@ typedef struct cms_msg_t{
     char data[MAX_NAME_LENGTH];
 } cms_msg_t;
 
+typedef struct cms_client_infor
+{
+    mqd_t my_mq;
+    char client_name[MAX_NAME_LENGTH];
+}cms_client_infor;
+
 /**
  * \brief Initialize cms client
  * \param mq_attr attributes of message queue
- * \param name_client name of client
+ * \param client_name name of client
  * \return client message queue descriptor if success
 */
-mqd_t init_client(struct mq_attr* mq_attr, char* name_client);
+cms_client_infor *init_client(struct mq_attr* mq_attr, char* client_name);
 
 /**
  * \brief Close cms client
  * \param mqdes client message queue descriptor
- * \param name_client name of client
+ * \param client_name name of client
  * \return CMS_SUCCESS/CMS_ERROR
 */
-void close_client(mqd_t mqdes, char* name_client);
+void close_client(const cms_client_infor * my_client);
 
 /**
  * \brief Send cms message 
@@ -93,7 +99,7 @@ void close_client(mqd_t mqdes, char* name_client);
  * \param data data of message
  * \return CMS_SUCCESS/CMS_ERROR
 */
-int send(char* source , char * topic, char * data);
+int send(const cms_client_infor * my_client, char * topic, char * data);
 
 /**
  * \brief Receive cms message
@@ -102,7 +108,7 @@ int send(char* source , char * topic, char * data);
  * \param data cms received message
  * \return CMS_SUCCESS/CMS_ERROR
 */
-int send_to(char * source, char * destination, char* data);
+int send_to(const cms_client_infor * my_client, char * destination, char* data);
 
 /**
  * \brief Receive cms message to server
@@ -110,7 +116,7 @@ int send_to(char * source, char * destination, char* data);
  * \param message cms received message
  * \return CMS_SUCCESS/CMS_ERROR
 */
-int receive(mqd_t mqdes, cms_msg_t* message);
+int receive(const cms_client_infor * my_client, cms_msg_t* message);
 
 /**
  * \brief Set message queue attributes
@@ -119,16 +125,17 @@ int receive(mqd_t mqdes, cms_msg_t* message);
  * \param msgsize maximum size of message
  * \return CMS_SUCCESS/CMS_ERROR
 */
-struct mq_attr create_attr(long flag, long maxmsg, long msgsize);
+struct mq_attr * create_attr(long flag, long maxmsg, long msgsize);
 
 /**
  * \brief Create cms message
  * \param tag tag of message
- * \param name_client name of client
+ * \param source name of client
+ * \param topic name of group destination
  * \param data data of message
  * \return CMS_SUCCESS/CMS_ERROR
 */
-cms_msg_t *create_msg(int tag, char* name_client, char* data);
+cms_msg_t create_message(int tag,const char* source,char* topic, char* data);
 
 /**
  * \brief subcribe one topic of server
@@ -136,7 +143,7 @@ cms_msg_t *create_msg(int tag, char* name_client, char* data);
  * \param topic destination of group
  * \return CMS_SUCCESS/CMS_ERROR
 */
-int subcribe_topic(char * source, char * topic);
+int subcribe_topic(const cms_client_infor * my_client, char * topic);
 
 /**
  * \brief unsubcribe one topic of server
@@ -144,6 +151,6 @@ int subcribe_topic(char * source, char * topic);
  * \param topic destination of group
  * \return CMS_SUCCESS/CMS_ERROR
 */
-int unsubcribe_topic(char * source, char * topic);
+int unsubcribe_topic(const cms_client_infor * my_client, char * topic);
 #endif
 

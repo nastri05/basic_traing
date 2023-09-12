@@ -4,26 +4,29 @@
 
 
 // mqd_t mqserver;
-mqd_t init_client(struct mq_attr* mq_attr,char *name_client)
+cms_client_infor *init_client(struct mq_attr* mq_attr,char *client_name)
 {
     mqd_t mqdes;
-    mq_unlink(name_client);
-    mqdes = mq_open(name_client, O_RDONLY | O_CREAT | O_NONBLOCK , 0666, mq_attr);
+    mq_unlink(client_name);
+    mqdes = mq_open(client_name, O_RDONLY | O_CREAT | O_NONBLOCK , 0666, mq_attr);
     if(mqdes == -1){
-        LOG_CLIENT_STATE("NOT INIT CLIENT\n");
+        LOG_CLIENT_STATE("CAN NOT INIT CLIENT\n");
+        return NULL;
     }
-    return mqdes;
+    LOG_CLIENT_STATE("INIT CLIENT\n");
+    cms_client_infor *client_infor = (cms_client_infor*) malloc(sizeof(cms_client_infor));
+    strcpy(client_infor->client_name,client_name);
+    client_infor->my_mq = mqdes;
+    return client_infor;
 }
 
-void close_client(mqd_t mqdes, char* name_client){
-    mq_close(mqdes);
-    mq_unlink(name_client);
-
+void close_client(const cms_client_infor * my_client){
+    mq_close(my_client->my_mq);
+    mq_unlink(my_client->client_name);
 }
 
-int send_to(char * source, char * destination, char* data){
-    cms_msg_t msg =create_msg(SEND_TO, source, destination, data);
-
+int send_to(const cms_client_infor * my_client, char * destination, char* data){
+    struct cms_msg_t msg = create_message(SEND_TO, my_client->client_name, destination, data);
     mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
     if(mqserver == CMS_ERROR){
         LOG_CLIENT_STATE("CAN NOT OPEN SERVER \n");
@@ -38,15 +41,15 @@ int send_to(char * source, char * destination, char* data){
     return CMS_SUCCESS;
 }
 
-int send(char * source, char * topic, char* data){
-    cms_msg_t msg = create_msg(SEND, source, topic, data);
+int send(const cms_client_infor * my_client, char * topic, char * data){
+    struct cms_msg_t msg = create_message(SEND, my_client->client_name, topic, data);
     mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
     if(mqserver == CMS_ERROR){
         LOG_CLIENT_STATE("CAN NOT OPEN SERVER\n");
         return CMS_ERROR;
     }
     if(mq_send(mqserver, (char *) &msg, sizeof(cms_msg_t), 0)==-1) {
-        LOG_CLIENT_STATE(" mq send error\n");
+        LOG_CLIENT_STATE("CAN'T OPEN SERVER\n");
         return CMS_ERROR;
     }
     LOG_CLIENT_STATE("SEND MESSAGE TO SERVER SUCCESS ");
@@ -54,9 +57,9 @@ int send(char * source, char * topic, char* data){
     return CMS_SUCCESS;
 }
 
-int subcribe_topic(char * source, char *topic){
+int subcribe_topic(const cms_client_infor * my_client, char * topic){
     
-    cms_msg_t msg = create_msg(SUBCRIBE_MESSAGE,source,topic,"SUBCRIBE TOPIC");
+    cms_msg_t msg = create_message(SUBCRIBE_MESSAGE,my_client->client_name,topic,"SUBCRIBE TOPIC");
     mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
     if(mqserver == CMS_ERROR){
         LOG_CLIENT_STATE("CAN NOT OPEN SERVER\n");
@@ -69,47 +72,108 @@ int subcribe_topic(char * source, char *topic){
     mq_close(mqserver);
     cms_msg_t respone;
     while(1){
-    int result = receive(source,&respone);
-    if(respone.tag == RESPONSE_MESSAGE){
-        if(respone.data ==)
+    int result = receive(my_client,&respone);
+    if(result == CMS_ERROR){
+        return CMS_ERROR;
     }
+    if(respone.tag == RESPONSE_MESSAGE){
+        if(strcmp(respone.data,CMS_SUBCRIBE_SUCCESS)==0){
+            LOG_CLIENT_STATE("SUBCRIBE SUCCESS\n");
+            return CMS_SUCCESS;
+        }else{
+            LOG_CLIENT_STATE("SUBCRIBE FAIL\n");
+            return CMS_FAIL;
+            }
+        }
     }
 }
 
-int receive(mqd_t mqdes, cms_msg_t* cms_msg){
-    int ret;
+int unsubcribe_topic(const cms_client_infor * my_client, char * topic){
+    
+    cms_msg_t msg = create_message(UNSUBCRIBE_MESSAGE,my_client->client_name,topic,"UNSUBCRIBE TOPIC");
+    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
+    if(mqserver == CMS_ERROR){
+        LOG_CLIENT_STATE("CAN NOT OPEN SERVER\n");
+        return CMS_ERROR;
+    }
+    if(mq_send(mqserver, (char *) &msg, sizeof(cms_msg_t), 0) == -1) {
+        LOG_CLIENT_STATE(" mq send error\n");
+        return CMS_ERROR;
+    }
+    mq_close(mqserver);
+    cms_msg_t respone;
     while(1){
-    ret = mq_receive(mqdes, (char *) cms_msg, sizeof(cms_msg_t), NULL);
-    if(ret > 0){
+    int result = receive(my_client,&respone);
+    if(respone.tag == RESPONSE_MESSAGE){
+        if(strcmp(respone.data,CMS_UNSUBCRIBE_SUCCESS)==0){
+            LOG_CLIENT_STATE("UNUBCRIBE SUCCESS\n");
+            return CMS_SUCCESS;
+        }else{
+            LOG_CLIENT_STATE("UNSUBCRIBE SUCCESS\n");
+            return CMS_FAIL;
+            }
+        }
+    }
+}
+
+
+int receive(const cms_client_infor * my_client, cms_msg_t* message){
+    int ret;
+    char result[MAX_NAME_LENGTH];
+    while(1){
+    ret = mq_receive(my_client->my_mq, (char *) message, sizeof(cms_msg_t), NULL);
+    if(ret > 0)
+    {
             LOG_CLIENT_STATE("---------------------------------\n");
             LOG_CLIENT_STATE("RECEIVE MESSAGE \n");
             LOG_CLIENT_STATE("---------------------------------\n");
             LOG_CLIENT_STATE("DATA MESSAGE : \n");
-            LOG_CLIENT_INT(cms_msg->tag);
-            LOG_CLIENT(cms_msg->source);
-            LOG_CLIENT(cms_msg->topic);
-            LOG_CLIENT(cms_msg->data);
+            LOG_CLIENT_INT(message->tag);
+            LOG_CLIENT(message->source);
+            LOG_CLIENT(message->topic);
+            LOG_CLIENT(message->data);
+            strcpy(result,CMS_RECEIVE_SUCCESS);
         break;
+    }else{
+            if(errno  != EAGAIN &&
+                errno  != EWOULDBLOCK && errno  != EINTR)
+                {
+                    LOG_CLIENT_INT(errno);
+                    strcpy(result,CMS_RECEIVE_FAIL);
+                    break;
+                }
+        }
+    
     }
-    }
+    //LOG_CLIENT(result);
+    cms_msg_t msg = create_message(RESPONSE_MESSAGE,my_client->client_name,"",result);
+    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
+    if(mqserver == CMS_ERROR){
+        LOG_CLIENT_STATE("CAN NOT OPEN SERVER\n");
+        return CMS_ERROR;
+        }
+    if(mq_send(mqserver, (char *) &msg, sizeof(cms_msg_t), 0) == -1) {
+        LOG_CLIENT_STATE(" mq send error\n");
+        return CMS_ERROR;
+        }
+    mq_close(mqserver);
     return ret;
 };
 
-struct mq_attr create_attr(long flag, long maxmsg, long msgsize){
-    struct mq_attr attr;
-    attr.mq_flags = flag;
-    attr.mq_maxmsg = msgsize;
-    attr.mq_msgsize = maxmsg;
-    attr.mq_curmsgs = 0;
-    return attr;
+struct mq_attr * create_attr(long flag, long maxmsg, long msgsize){
+    struct mq_attr *mq_attr = (struct mq_attr *)malloc(sizeof(struct mq_attr));
+    mq_attr->mq_flags = flag;
+    mq_attr->mq_maxmsg = maxmsg;
+    mq_attr->mq_msgsize = msgsize;
+    mq_attr->mq_curmsgs = 0;
+    return mq_attr;
 }
 
-struct cms_msg_t create_msg(int tag, char* name_client,char* topic, char* data){
+struct cms_msg_t create_message(int tag,const char* source,char* topic, char* data){
     struct cms_msg_t message;
     message.tag = tag;
-    strcpy(message.source, name_client);
+    strcpy(message.source, source);
     strcpy(message.topic, topic);
     strcpy(message.data, data);
     return message;
 }
-

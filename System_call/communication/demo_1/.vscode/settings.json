@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "hmxcms_linkedlist.h": "c",
-        "hmxcms_lib.h": "c"
+        "hmxcms_lib.h": "c",
+        "hmxcms_server.h": "c"
     }
 }

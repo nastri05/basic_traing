@@ -18,7 +18,7 @@ app:
 clean:
 	rm -rf ./libstatic/*.a client libstatic/server libstatic/client_receive libstatic/send1 libstatic/receive1 libstatic/receive2
 	rm -rf ./libstatic/libhmxcms_lib.o ./libstatic/libhmxcms_linkedlist.o
-	rm -rf ./libdynamic/*.so client libdynamic/server libdynamic/client_receive libdynamic/send1 libdynamic/receive1 libdynamic/receive2
+	rm -rf ./libdynamic/*.so client libdynamic/server libdynamic/client_receive libdynamic/client_receive_2 libdynamic/client libdynamic/send1 libdynamic/receive1 libdynamic/receive2
 	rm -rf ./libdynamic/libhmxcms_lib.o ./libdynamic/libhmxcms_linkedlist.o
 	
 dynamic: lib_dynamic app_dynamic
@@ -28,7 +28,7 @@ lib_dynamic:
 	$(CC) -c -fPIC lib/hmxcms_linkedlist.c -o libdynamic/libhmxcms_linkedlist.o
 	$(CC) -shared libdynamic/libhmxcms_lib.o libdynamic/libhmxcms_linkedlist.o -o libdynamic/libhmxcms.so
 app_dynamic:
-	$(CC) hmxcms_server.c -Ilib -Llibdynamic -Llibdynamic -lhmxcms -o libdynamic/server -pthread -lrt 
-	$(CC) hmxcms_client.c -Ilib -Llibdynamic -lhmxcms -o libdynamic/client -pthread -lrt
+	# $(CC) hmxcms_server.c -Ilib -Llibdynamic -Llibdynamic -lhmxcms -o libdynamic/server -pthread -lrt 
+	$(CC) server_fake.c -Ilib -Llibdynamic -lhmxcms -o libdynamic/server_fake -pthread -lrt
 	$(CC) hmxcms_client_receive.c -Ilib -Llibdynamic -lhmxcms -o libdynamic/client_receive_2 -pthread -lrt
 

@@ -3,7 +3,7 @@
 #include<stdio.h>
 #include <string.h>
 #include "hmxcms_lib.h"
-
+// #define MAX_NAME_LENGTH 32
 
 #define CMS_SUCCESS     0
 #define CMS_ERROR       -1
@@ -20,31 +20,31 @@
 #define LOG_STATE(x)
 #endif
 
-typedef struct data_t{
+typedef struct cms_data_t{
     char client_name[MAX_NAME_LENGTH];
     char topic[MAX_NAME_LENGTH];
-} data_t;
+} cms_data_t;
 
 
 typedef struct cms_client_t{
-    data_t * data;
+    cms_data_t * data;
     struct cms_client_t *next;
 } cms_client_t;
 
 /*
-@brief create pointer data_t with informations in it
+@brief create pointer cms_data_t with informations in it
 @param client_name is name of client that user want to name
 @param topic is name topic that client want send or receive from it
-@return the pointer data_t contains the information that was passed into it
+@return the pointer cms_data_t contains the information that was passed into it
 */
-data_t *create_data(char * client_name, char * topic);
+cms_data_t *create_data(char * client_name, char * topic);
 
 /*
 @brief get client name form data
 @param data contains information
 @return client name
 */
-char *get_client_name(data_t * data);
+char *get_client_name(cms_data_t * data);
 
 /*
 @brief get mq client form data
@@ -52,7 +52,7 @@ char *get_client_name(data_t * data);
 @return mq name
 */
 
-char *get_topic(data_t * data);
+char *get_topic(cms_data_t * data);
 
 /*
 @brief change values in data
@@ -60,21 +60,21 @@ char *get_topic(data_t * data);
 @param source is data contains information want change into destination
 @return void
 */
-void change_data(data_t * destination, data_t * source);
+void change_data(cms_data_t * destination, cms_data_t * source);
 
 /*
 @brief print informations in data
 @param data contains information
 @return void
 */
-void printf_data(data_t * data);
+void printf_data(cms_data_t * data);
 
 /*
 @brief create client to create linked list
 @param data contains information for client
 @return the pointer cms_client_t 
 */
-cms_client_t *create_client(data_t * data);
+cms_client_t *create_client(cms_data_t * data);
 
 /*
 @brief add client into linked list
@@ -82,7 +82,7 @@ cms_client_t *create_client(data_t * data);
 @param data is contains information for add client
 @return result of adding client in list
 */
-int add_client( cms_client_t ** head_client , data_t * data);
+int add_client( cms_client_t ** head_client , cms_data_t * data);
 
 /*
 @brief remove client at index location in list 
@@ -99,7 +99,7 @@ int delete_client( cms_client_t ** head_client, int index);
 @param data contains information for change data client
 @return result of change data of client
 */
-int change_data_client( cms_client_t ** head_client, int index, data_t * data);
+int change_data_client( cms_client_t ** head_client, int index, cms_data_t * data);
 
 /*
 @brief get length array and array contain location of client want reiceve information form topic
@@ -124,7 +124,7 @@ int get_index_by_name(cms_client_t *head_client, char *client_name);
 @param data data
 @return index of data
 */
-int get_index_by_data(cms_client_t *head, data_t *data);
+int get_index_by_data(cms_client_t *head, cms_data_t *data);
 
 /*
 @brief get length of linked list
@@ -137,17 +137,17 @@ int get_length_list(cms_client_t *head_client);
 @brief get data by name in list
 @param head_client is header linked list
 @param client_name is client name need find
-@return data_t contains client's information 
+@return cms_data_t contains client's information 
 */
-data_t *get_data_by_name(cms_client_t *head_client, char * client_name);
+cms_data_t *get_data_by_name(cms_client_t *head_client, char * client_name);
 
 /*
 @brief get data by client's location in list
 @param head_client is header linked list
 @param index is client's location
-@return data_t contains client's information
+@return cms_data_t contains client's information
  */
-data_t *get_data_by_index(cms_client_t *head_client, int index);
+cms_data_t *get_data_by_index(cms_client_t *head_client, int index);
 
 /*
 @brief delete linked list
@@ -162,3 +162,9 @@ void free_list(cms_client_t **head_client); // pass
 @return void
 */
 void print_list( cms_client_t *head_client); //pass
+
+
+// /*----------temporary--------------*/
+// int cms_send(mqd_t mqdes, int tag, char *name_client, char *mq_name, int type, char *topic, char *data);
+// int cms_receive(mqd_t mqdes, cms_msg_t* cms_msg);
+// int create_msg(cms_msg_t* msg, int tag, char* name_client, char* mq_name, int type, char* topic, char* data);
