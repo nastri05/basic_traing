@@ -11,10 +11,11 @@ int main ()
         return 0;
     }
     cms_msg_t * message = (cms_msg_t*) malloc(sizeof(cms_msg_t));
+    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_RDONLY | O_CREAT | O_NONBLOCK,0666,NULL);
+
     while (1)
     {
         /* code */
-        mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_RDONLY | O_CREAT | O_NONBLOCK,0666,NULL);
         int result = mq_receive(mqserver, (char *) message, sizeof(cms_msg_t), NULL);
         if(result >0){
             LOG_CLIENT_STATE("HELLO BANJ NHo\n");
