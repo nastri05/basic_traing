@@ -1,8 +1,9 @@
-#include "hmxcms_client_receive.h"
+#include "lib/hmxcms_lib.h"
 
 
 int main ()
 {
+
     struct mq_attr *mq_attr = create_attr(0,10,sizeof(cms_msg_t));
     cms_client_infor * my_mq = init_client(mq_attr,"/daten_1");
     if(my_mq == NULL){
@@ -16,12 +17,13 @@ int main ()
     while (1)
     {
         /* code */
-        int result =receive(my_mq,message);
+        result =receive(my_mq,message);
         if(result == CMS_ERROR){
             break;
         }
         
     }
+    // result = subcribe_topic(my_mq, "lan");
     free(mq_attr);
     free(my_mq);
     return 0;

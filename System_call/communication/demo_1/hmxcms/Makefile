@@ -1,34 +1,20 @@
-.PHONY: lib
-all :lib app
-#CC = /opt/trendchip/buildroot-gcc493_glibc222_arm32_32bServer/usr/bin/arm-buildroot-linux-gnueabi-gcc
- CC =gcc
-lib:
-	gcc -c lib/hmxcms_linkedlist.c -o libstatic/libhmxcms_linkedlist.o
-	ar rcs libstatic/libhmxcms_linkedlist.a libstatic/libhmxcms_linkedlist.o
+.PHONY: clean
 
-	gcc -c lib/hmxcms_lib.c -o libstatic/libhmxcms_lib.o
-	ar rcs libstatic/libhmxcms_lib.a libstatic/libhmxcms_lib.o
-app:
-	gcc hmxcms_server.c -Ilib -Llibstatic -Llibstatic -lhmxcms_lib -lhmxcms_linkedlist -o libstatic/server -pthread -lrt -ggdb
-	gcc hmxcms_client.c -Ilib -Llibstatic -lhmxcms_lib -o libstatic/client -pthread -lrt
-	gcc hmxcms_client_receive.c -Ilib -Llibstatic -lhmxcms_lib -o libstatic/client_receive -pthread -lrt
-	gcc send1.c -Ilib -Llibstatic -lhmxcms_lib -o libstatic/send1 -pthread -lrt
-	gcc receive1.c -Ilib -Llibstatic -lhmxcms_lib -o libstatic/receive1 -pthread -lrt
-	gcc receive2.c -Ilib -Llibstatic -lhmxcms_lib -o libstatic/receive2 -pthread -lrt 
 clean:
-	rm -rf ./libstatic/*.a client libstatic/server libstatic/client_receive libstatic/send1 libstatic/receive1 libstatic/receive2
-	rm -rf ./libstatic/libhmxcms_lib.o ./libstatic/libhmxcms_linkedlist.o
-	rm -rf ./libdynamic/*.so client libdynamic/server libdynamic/client_receive libdynamic/client_receive_2 libdynamic/client libdynamic/send1 libdynamic/receive1 libdynamic/receive2
-	rm -rf ./libdynamic/libhmxcms_lib.o ./libdynamic/libhmxcms_linkedlist.o
+	rm -rf ./libdynamic/libhmxcms_lib.o ./libdynamic/libhmxcms_linkedlist.o ./libdynamic/hmxcms_monitor.o 
+	rm -rf ./libdynamic/*.so server receive send1 send
 	
 dynamic: lib_dynamic app_dynamic
 
 lib_dynamic:
+	mkdir -p libdynamic/
 	$(CC) -c -fPIC lib/hmxcms_lib.c -o libdynamic/libhmxcms_lib.o
 	$(CC) -c -fPIC lib/hmxcms_linkedlist.c -o libdynamic/libhmxcms_linkedlist.o
-	$(CC) -shared libdynamic/libhmxcms_lib.o libdynamic/libhmxcms_linkedlist.o -o libdynamic/libhmxcms.so
+	$(CC) -c -fPIC lib/hmxcms_monitor.c -o libdynamic/hmxcms_monitor.o
+	$(CC) -shared libdynamic/libhmxcms_lib.o libdynamic/libhmxcms_linkedlist.o libdynamic/hmxcms_monitor.o -o libdynamic/libhmxcms.so
 app_dynamic:
-	# $(CC) hmxcms_server.c -Ilib -Llibdynamic -Llibdynamic -lhmxcms -o libdynamic/server -pthread -lrt 
-	$(CC) server_fake.c -Ilib -Llibdynamic -lhmxcms -o libdynamic/server_fake -pthread -lrt
-	$(CC) hmxcms_client_receive.c -Ilib -Llibdynamic -lhmxcms -o libdynamic/client_receive_2 -pthread -lrt
+	$(CC) hmxcms_server.c -Ilib -Llibdynamic -lhmxcms -o server -pthread -lrt 
+	$(CC) send1.c -Ilib -Llibdynamic -lhmxcms -o send1 -pthread -lrt
+	$(CC) receive.c -Ilib -Llibdynamic -lhmxcms -o receive -pthread -lrt
 
+#LD_LIBRARY_PATH=./

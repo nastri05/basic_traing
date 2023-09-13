@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <limits.h>
+#include <string.h>
 
 #define DEBUG_LIB
 
@@ -32,15 +33,15 @@
 
 
 // Define response data
-#define CMS_RECEIVE_SUCCESS       "CMS_SUBCRIBE_SUCCESS"
+#define CMS_RECEIVE_SUCCESS       "CMS_RECEIVE_SUCCESS"
 #define CMS_RECEIVE_FAIL          "CMS_RECEIVE_FAIL"
 #define CMS_SUBCRIBE_SUCCESS      "CMS_SUBCRIBE_SUCCESS"
 #define CMS_SUBCRIBE_FAIL         "CMS_SUBCRIBE_FAIL"
-#define CMS_UNSUBCRIBE_SUCCESS    "CMS_SUBCRIBE_SUCCESS"  
+#define CMS_UNSUBCRIBE_SUCCESS    "CMS_UNSUBCRIBE_SUCCESS"  
 #define CMS_UNSUBCRIBE_FAIL       "CMS_UNSUBCRIBE_FAIL"  
 
 
-#define MAX_NAME_LENGTH         32
+#define MAX_NAME_LENGTH         64
 
 
 #define CMS_SUCCESS              0
@@ -48,11 +49,11 @@
 #define CMS_ERROR               -1
 
 enum TAG_MESSAGE {
-    SUBCRIBE_MESSAGE = 0,
-    UNSUBCRIBE_MESSAGE,
-    SEND,
-    SEND_TO,
-    RESPONSE_MESSAGE
+    CMS_SUBCRIBE_MESSAGE = 0,
+    CMS_UNSUBCRIBE_MESSAGE,
+    CMS_REQUEST_SEND_MESSAGE,
+    CMS_REQUEST_SEND_TO_MESSAGE,
+    CMS_RESPONSE_MESSAGE
 };
 
 
@@ -77,10 +78,10 @@ typedef struct cms_client_infor
 }cms_client_infor;
 
 /**
- * \brief Initialize cms client
+ * \brief Initialize cms client 
  * \param mq_attr attributes of message queue
  * \param client_name name of client
- * \return client message queue descriptor if success
+ * \return cms_client_infor* client message queue descriptor if success
 */
 cms_client_infor *init_client(struct mq_attr* mq_attr, char* client_name);
 
@@ -88,25 +89,25 @@ cms_client_infor *init_client(struct mq_attr* mq_attr, char* client_name);
  * \brief Close cms client
  * \param mqdes client message queue descriptor
  * \param client_name name of client
- * \return CMS_SUCCESS/CMS_ERROR
+ * \return void
 */
 void close_client(const cms_client_infor * my_client);
 
 /**
  * \brief Send cms message 
  * \param source identify of client
- * \param topic destination of group 
+ * \param topic destination is group of clients interested in the topic 
  * \param data data of message
- * \return CMS_SUCCESS/CMS_ERROR
+ * \return CMS_FAIL/CMS_SUCCESS/CMS_ERROR
 */
 int send(const cms_client_infor * my_client, char * topic, char * data);
 
 /**
  * \brief Receive cms message
  * \param source identify of client
- * \param topic destination group/client
+ * \param destination destination group/client
  * \param data cms received message
- * \return CMS_SUCCESS/CMS_ERROR
+ * \return CMS_ERROR/CMS_SUCCESS/CMS_FAIL
 */
 int send_to(const cms_client_infor * my_client, char * destination, char* data);
 
@@ -114,7 +115,7 @@ int send_to(const cms_client_infor * my_client, char * destination, char* data);
  * \brief Receive cms message to server
  * \param mqdes client message queue descriptor
  * \param message cms received message
- * \return CMS_SUCCESS/CMS_ERROR
+ * \return length_message/CMS_ERROR
 */
 int receive(const cms_client_infor * my_client, cms_msg_t* message);
 
@@ -123,7 +124,7 @@ int receive(const cms_client_infor * my_client, cms_msg_t* message);
  * \param flag flag
  * \param maxmsg maximum message in queue
  * \param msgsize maximum size of message
- * \return CMS_SUCCESS/CMS_ERROR
+ * \return struct mq_attr *
 */
 struct mq_attr * create_attr(long flag, long maxmsg, long msgsize);
 
@@ -133,7 +134,7 @@ struct mq_attr * create_attr(long flag, long maxmsg, long msgsize);
  * \param source name of client
  * \param topic name of group destination
  * \param data data of message
- * \return CMS_SUCCESS/CMS_ERROR
+ * \return struct cms_msg_t 
 */
 cms_msg_t create_message(int tag,const char* source,char* topic, char* data);
 
@@ -141,7 +142,7 @@ cms_msg_t create_message(int tag,const char* source,char* topic, char* data);
  * \brief subcribe one topic of server
  * \param source identify of client
  * \param topic destination of group
- * \return CMS_SUCCESS/CMS_ERROR
+ * \return CMS_SUCCESS/CMS_ERROR/CMS_ERROR
 */
 int subcribe_topic(const cms_client_infor * my_client, char * topic);
 
@@ -149,7 +150,7 @@ int subcribe_topic(const cms_client_infor * my_client, char * topic);
  * \brief unsubcribe one topic of server
  * \param source identify of client
  * \param topic destination of group
- * \return CMS_SUCCESS/CMS_ERROR
+ * \return CMS_SUCCESS/CMS_ERROR/CMS_ERROR
 */
 int unsubcribe_topic(const cms_client_infor * my_client, char * topic);
 #endif

@@ -185,29 +185,31 @@ int get_length_list(cms_client_t *head_client){
     return length;
 }
 
-int get_index_by_name(cms_client_t *head_client, char *client_name){
+int get_index_by_name(cms_client_t *head_client, char *client_name , int * result){
     cms_client_t * tmp = head_client;
     int index = 0;
+    int size_arr = 0;
     while (tmp != NULL)
     {
         if(strcmp(get_client_name(tmp->data),client_name)==0){
-            LOG_STATE("---------------------------------\n");
-            LOG_STATE("found client name \n");
-            LOG_STATE("---------------------------------\n");
-            return index;
+            result[size_arr] = index;
+            size_arr++;
         }
         tmp = tmp->next;
         index ++;
     }
-    LOG_STATE("---------------------------------\n");
-    LOG_STATE("Not found client name in list \n");
-    LOG_STATE("---------------------------------\n");
-    return CMS_ERROR;
+    if(size_arr == 0 ){
+        LOG_STATE("---------------------------------\n");
+        LOG_STATE("Not found client name in list \n");
+        LOG_STATE("---------------------------------\n");
+        return CMS_ERROR;
+    }
+    return size_arr;
 }
 
-int get_index_by_data(cms_client_t *head, cms_data_t *data) 
+int get_index_by_data(cms_client_t *head_client, cms_data_t *data) 
 {
-    cms_client_t *tmp = head;
+    cms_client_t *tmp = head_client;
     int index = 0;
     while (tmp != NULL)
     {
@@ -215,7 +217,7 @@ int get_index_by_data(cms_client_t *head, cms_data_t *data)
             strcmp(get_topic(data), get_topic(tmp->data)) == 0 )
         {
             LOG_STATE("---------------------------------\n");
-            LOG_STATE("found data \n");
+            LOG_STATE("found data in list \n");
             LOG_STATE("---------------------------------\n");
             return index;
         }
@@ -312,34 +314,34 @@ void print_list( cms_client_t *head_client){
     return;
 }
 
-// nhet tam thoi
-// int cms_send(mqd_t mqdes, int tag, char *name_client, char *mq_name, int type, char *topic, char *data){
-//     cms_msg_t msg ;
-//     // = (cms_msg_t*) malloc(sizeof(cms_msg_t));
-//     create_msg(&msg, tag, name_client, mq_name, type, topic, data);
+int count_topic( cms_client_t *head_client){
+    
+    int length_list = get_length_list(head_client); 
+    LOG_INT(length_list);
+    if(length_list == 0){
+        return length_list;
+    }
+    int i;
+    cms_client_t * tmp = head_client;
+    char topic[length_list][MAX_NAME_LENGTH];
+    int count_topic= 0;
+    for(i = 0 ; i <length_list; i++){
+        int j;
+        for(j = 0; j <= count_topic;j++){
+            if(strcmp(topic[j],tmp->data->topic)==0){
+                break;
+            }
+            if(j == count_topic){
+                strcpy(topic[count_topic],tmp->data->topic);
+                count_topic++;
+                break;
+            }
+        }
+        tmp =  tmp->next;
+    }
+    return count_topic;
+}
 
-//     if(mq_send(mqdes, (char *) &msg, sizeof(cms_msg_t), 0)==-1) {
-//         printf(" mq send error\n");
-//         return CMS_ERROR;
-//     }
-//     return CMS_SUCCESS;
-// }
-
-// int cms_receive(mqd_t mqdes, cms_msg_t* cms_msg){
-//     int ret = mq_receive(mqdes, (char *) cms_msg, sizeof(cms_msg_t), NULL);
-//     return (ret == -1) ? CMS_ERROR : ret;
-// };
-
-// int create_msg(cms_msg_t* msg, int tag, char* name_client, char* mq_name, int type, char* topic, char* data){
-//     msg->tag = tag;
-//     strcpy(msg->payload.client_name, name_client);
-//     strcpy(msg->payload.mq_name, mq_name);
-//     msg->payload.type = type;
-//     strcpy(msg->payload.topic, topic);
-//     strcpy(msg->payload.data, data);
-//     msg->length = sizeof(msg->payload);
-//     return CMS_SUCCESS;
-// }
 
 // int main(){
 //     cms_client_t *list_client = NULL;
@@ -351,7 +353,7 @@ void print_list( cms_client_t *head_client){
 //     // print_list(list_client);
 //     // LOG_STATE("Value of result : \n");
 //     // LOG_INT(result);
-//     data = create_data("pog3","wifi");
+//     data = create_data("pog3","wan");
 //     result = add_client(&list_client,data);
     
 //     data = create_data("dante","wan");
@@ -360,24 +362,28 @@ void print_list( cms_client_t *head_client){
 //     data = create_data("hxtuan","wan");
 //     result = add_client(&list_client,data);
     
-//     data = create_data("dante_hoang","wifi");
+//     data = create_data("dante_hoang","wan");
 //     result = add_client(&list_client,data);
     
-//     data = create_data("ricon","PON");
+//     data = create_data("ricon","wan");
 //     result = add_client(&list_client,data);
 
-//     data = create_data("Nhabao(nguoiY)","wifi");
+//     data = create_data("Nhabao(nguoiY)","wan");
 //     result = add_client(&list_client,data);
 
 //     data = create_data("sol7","wan");
+//     result = add_client(&list_client,data);
+
+//     data = create_data("sol8","wan");
 //     result = add_client(&list_client,data);
 
 //     print_list(list_client);
 //     int length = get_length_list(list_client);
 //     LOG_INT(get_length_list(list_client));
 //     // int i;
-    
-//     print_list(list_client);
+//     LOG_INT(count_topic(list_client));
+
+//     //  print_list(list_client);
 //     // data = create_data("sol7","wan");
 //     // result = add_client(&list_client,data);
 //     // result = get_index_by_name(list_client, "pog3");
@@ -397,11 +403,11 @@ void print_list( cms_client_t *head_client){
 //     // result = get_index_by_data(list_client,data);
 //     // LOG_STATE("Length of result_arr\n");
 //     // LOG_INT(result);
-//     int i ;
-//     for(i = 0; i < length;i++){
-//     data = get_data_by_index(list_client,i);
-//     printf_data(data);
-//     }
+//     // int i ;
+//     // for(i = 0; i < length;i++){
+//     // data = get_data_by_index(list_client,i);
+//     // printf_data(data);
+//     // }
 //     // int i;
 //     // for(i = 0; i < result ;i++){
 //     //     LOG_INT(result_arr[i]);

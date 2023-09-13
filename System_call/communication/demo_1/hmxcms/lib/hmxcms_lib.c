@@ -1,6 +1,5 @@
 #include "hmxcms_lib.h"
-#include <string.h>
-#include<unistd.h>
+
 
 
 // mqd_t mqserver;
@@ -26,15 +25,15 @@ void close_client(const cms_client_infor * my_client){
 }
 
 int send_to(const cms_client_infor * my_client, char * destination, char* data){
-    struct cms_msg_t msg = create_message(SEND_TO, my_client->client_name, destination, data);
-    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
+    struct cms_msg_t msg = create_message(CMS_REQUEST_SEND_TO_MESSAGE, my_client->client_name, destination, data);
+    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY |O_NONBLOCK);
     if(mqserver == CMS_ERROR){
         LOG_CLIENT_STATE("CAN NOT OPEN SERVER \n");
         return CMS_ERROR;
     }
     if(mq_send(mqserver, (char *) &msg, sizeof(cms_msg_t), 0)==-1) {
         LOG_CLIENT_STATE("MQ SEND ERROR\n");
-        return CMS_ERROR;
+        return CMS_FAIL;
     }
     LOG_CLIENT_STATE("SEND MESSAGE SUCCESS  \n");
     mq_close(mqserver);
@@ -42,25 +41,25 @@ int send_to(const cms_client_infor * my_client, char * destination, char* data){
 }
 
 int send(const cms_client_infor * my_client, char * topic, char * data){
-    struct cms_msg_t msg = create_message(SEND, my_client->client_name, topic, data);
-    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
+    struct cms_msg_t msg = create_message(CMS_REQUEST_SEND_MESSAGE, my_client->client_name, topic, data);
+    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY | O_NONBLOCK);
     if(mqserver == CMS_ERROR){
         LOG_CLIENT_STATE("CAN NOT OPEN SERVER\n");
         return CMS_ERROR;
     }
-    if(mq_send(mqserver, (char *) &msg, sizeof(cms_msg_t), 0)==-1) {
+    if(mq_send(mqserver, (char *) &msg, sizeof(cms_msg_t), 0)==CMS_ERROR) {
         LOG_CLIENT_STATE("CAN'T OPEN SERVER\n");
-        return CMS_ERROR;
+        return CMS_FAIL;
     }
-    LOG_CLIENT_STATE("SEND MESSAGE TO SERVER SUCCESS ");
+    LOG_CLIENT_STATE("SEND MESSAGE TO SERVER SUCCESS \n");
     mq_close(mqserver);
     return CMS_SUCCESS;
 }
 
 int subcribe_topic(const cms_client_infor * my_client, char * topic){
     
-    cms_msg_t msg = create_message(SUBCRIBE_MESSAGE,my_client->client_name,topic,"SUBCRIBE TOPIC");
-    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
+    cms_msg_t msg = create_message(CMS_SUBCRIBE_MESSAGE,my_client->client_name,topic,"SUBCRIBE TOPIC");
+    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY | O_NONBLOCK);
     if(mqserver == CMS_ERROR){
         LOG_CLIENT_STATE("CAN NOT OPEN SERVER\n");
         return CMS_ERROR;
@@ -76,7 +75,7 @@ int subcribe_topic(const cms_client_infor * my_client, char * topic){
     if(result == CMS_ERROR){
         return CMS_ERROR;
     }
-    if(respone.tag == RESPONSE_MESSAGE){
+    if(respone.tag == CMS_RESPONSE_MESSAGE){
         if(strcmp(respone.data,CMS_SUBCRIBE_SUCCESS)==0){
             LOG_CLIENT_STATE("SUBCRIBE SUCCESS\n");
             return CMS_SUCCESS;
@@ -90,8 +89,8 @@ int subcribe_topic(const cms_client_infor * my_client, char * topic){
 
 int unsubcribe_topic(const cms_client_infor * my_client, char * topic){
     
-    cms_msg_t msg = create_message(UNSUBCRIBE_MESSAGE,my_client->client_name,topic,"UNSUBCRIBE TOPIC");
-    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
+    cms_msg_t msg = create_message(CMS_UNSUBCRIBE_MESSAGE,my_client->client_name,topic,"UNSUBCRIBE TOPIC");
+    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY |O_NONBLOCK);
     if(mqserver == CMS_ERROR){
         LOG_CLIENT_STATE("CAN NOT OPEN SERVER\n");
         return CMS_ERROR;
@@ -104,7 +103,7 @@ int unsubcribe_topic(const cms_client_infor * my_client, char * topic){
     cms_msg_t respone;
     while(1){
     int result = receive(my_client,&respone);
-    if(respone.tag == RESPONSE_MESSAGE){
+    if(respone.tag == CMS_RESPONSE_MESSAGE){
         if(strcmp(respone.data,CMS_UNSUBCRIBE_SUCCESS)==0){
             LOG_CLIENT_STATE("UNUBCRIBE SUCCESS\n");
             return CMS_SUCCESS;
@@ -146,8 +145,8 @@ int receive(const cms_client_infor * my_client, cms_msg_t* message){
     
     }
     //LOG_CLIENT(result);
-    cms_msg_t msg = create_message(RESPONSE_MESSAGE,my_client->client_name,"",result);
-    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
+    cms_msg_t msg = create_message(CMS_RESPONSE_MESSAGE,my_client->client_name,"",result);
+    mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY | O_NONBLOCK);
     if(mqserver == CMS_ERROR){
         LOG_CLIENT_STATE("CAN NOT OPEN SERVER\n");
         return CMS_ERROR;

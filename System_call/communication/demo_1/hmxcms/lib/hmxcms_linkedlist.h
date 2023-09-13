@@ -116,7 +116,7 @@ int get_index_by_topic(cms_client_t *head_client, char *topic, int *result);
 @param client_name is client name need find
 @return location of client
 */
-int get_index_by_name(cms_client_t *head_client, char *client_name);
+int get_index_by_name(cms_client_t *head_client, char *client_name , int * result);
 
 /*
 @brief get index of data in linked list
@@ -162,9 +162,8 @@ void free_list(cms_client_t **head_client); // pass
 @return void
 */
 void print_list( cms_client_t *head_client); //pass
-
-
-// /*----------temporary--------------*/
-// int cms_send(mqd_t mqdes, int tag, char *name_client, char *mq_name, int type, char *topic, char *data);
-// int cms_receive(mqd_t mqdes, cms_msg_t* cms_msg);
-// int create_msg(cms_msg_t* msg, int tag, char* name_client, char* mq_name, int type, char* topic, char* data);
+/*
+@brief count number topic in list
+@param head_client is head of linked list client
+*/
+int count_topic( cms_client_t *head_client);
