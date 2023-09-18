@@ -48,6 +48,13 @@
 #define CMS_FAIL                 1
 #define CMS_ERROR               -1
 
+
+#define HMX_CLIENT_1        "/HMX_CLIENT_1"
+#define HMX_CLIENT_2        "/HMX_CLIENT_2"
+#define HMX_CLIENT_3        "/HMX_CLIENT_3"
+#define HMX_CLIENT_4        "/HMX_CLIENT_4"
+#define HMX_CLIENT_5        "/HMX_CLIENT_5"
+
 enum TAG_MESSAGE {
     CMS_SUBCRIBE_MESSAGE = 0,
     CMS_UNSUBCRIBE_MESSAGE,
@@ -71,7 +78,7 @@ typedef struct cms_msg_t{
     char data[MAX_NAME_LENGTH];
 } cms_msg_t;
 
-typedef struct cms_client_infor
+typedef struct 
 {
     mqd_t my_mq;
     char client_name[MAX_NAME_LENGTH];
@@ -83,7 +90,7 @@ typedef struct cms_client_infor
  * \param client_name name of client
  * \return cms_client_infor* client message queue descriptor if success
 */
-cms_client_infor *init_client(struct mq_attr* mq_attr, char* client_name);
+cms_client_infor *cms_client_init(struct mq_attr* mq_attr, char* client_name);
 
 /**
  * \brief Close cms client
@@ -91,7 +98,7 @@ cms_client_infor *init_client(struct mq_attr* mq_attr, char* client_name);
  * \param client_name name of client
  * \return void
 */
-void close_client(const cms_client_infor * my_client);
+void cms_client_close(const cms_client_infor * my_client);
 
 /**
  * \brief Send cms message 
@@ -100,7 +107,7 @@ void close_client(const cms_client_infor * my_client);
  * \param data data of message
  * \return CMS_FAIL/CMS_SUCCESS/CMS_ERROR
 */
-int send(const cms_client_infor * my_client, char * topic, char * data);
+int cms_send(const cms_client_infor * my_client, char * topic, char * data);
 
 /**
  * \brief Receive cms message
@@ -109,7 +116,7 @@ int send(const cms_client_infor * my_client, char * topic, char * data);
  * \param data cms received message
  * \return CMS_ERROR/CMS_SUCCESS/CMS_FAIL
 */
-int send_to(const cms_client_infor * my_client, char * destination, char* data);
+int cms_send_to(const cms_client_infor * my_client, char * destination, char* data);
 
 /**
  * \brief Receive cms message to server
@@ -117,7 +124,7 @@ int send_to(const cms_client_infor * my_client, char * destination, char* data);
  * \param message cms received message
  * \return length_message/CMS_ERROR
 */
-int receive(const cms_client_infor * my_client, cms_msg_t* message);
+int cms_receive(const cms_client_infor * my_client, cms_msg_t* message);
 
 /**
  * \brief Set message queue attributes
@@ -126,7 +133,7 @@ int receive(const cms_client_infor * my_client, cms_msg_t* message);
  * \param msgsize maximum size of message
  * \return struct mq_attr *
 */
-struct mq_attr * create_attr(long flag, long maxmsg, long msgsize);
+struct mq_attr * cms_create_attr(long flag, long maxmsg, long msgsize);
 
 /**
  * \brief Create cms message
@@ -136,7 +143,7 @@ struct mq_attr * create_attr(long flag, long maxmsg, long msgsize);
  * \param data data of message
  * \return struct cms_msg_t 
 */
-cms_msg_t create_message(int tag,const char* source,char* topic, char* data);
+cms_msg_t cms_create_message(int tag,const char* source,char* topic, char* data);
 
 /**
  * \brief subcribe one topic of server
@@ -144,7 +151,7 @@ cms_msg_t create_message(int tag,const char* source,char* topic, char* data);
  * \param topic destination of group
  * \return CMS_SUCCESS/CMS_ERROR/CMS_ERROR
 */
-int subcribe_topic(const cms_client_infor * my_client, char * topic);
+int cms_subcribe_topic(const cms_client_infor * my_client, char * topic);
 
 /**
  * \brief unsubcribe one topic of server
@@ -152,6 +159,6 @@ int subcribe_topic(const cms_client_infor * my_client, char * topic);
  * \param topic destination of group
  * \return CMS_SUCCESS/CMS_ERROR/CMS_ERROR
 */
-int unsubcribe_topic(const cms_client_infor * my_client, char * topic);
+int cms_unsubcribe_topic(const cms_client_infor * my_client, char * topic);
 #endif
 

@@ -8,7 +8,7 @@
 #define CMS_SUCCESS     0
 #define CMS_ERROR       -1
 
-#define DEBUG_LIST
+#undef DEBUG_LIST
 #ifdef DEBUG_LIST
 #define STR(x)   #x
 #define LOG(x) printf("[LIST] [%s]         %s = %s\n",__FUNCTION__,STR(x),x)

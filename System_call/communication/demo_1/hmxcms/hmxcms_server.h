@@ -59,7 +59,7 @@ mqd_t cms_server_init();
  * \brief Start communication management server
  * \return nothing
  */
-void cms_server_start();
+void cms_server_start(mqd_t mqdes);
 
 /**
  * \brief Stop communication management server

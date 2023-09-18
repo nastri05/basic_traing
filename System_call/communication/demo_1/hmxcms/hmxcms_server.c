@@ -5,6 +5,8 @@ long max_msg;
 mqd_t mqd;
 cms_client_t *head_client = NULL;
 cms_monitor_info_t *head_monitor = NULL;
+cms_msg_t *oldest_cms_msg;
+long long count_send = 0;
 
 void cms_sig_handler()
 {
@@ -16,8 +18,8 @@ void cms_sig_handler()
 int cms_full_queue_handler(cms_msg_t *msg, mqd_t mqdes, char *client_name)
 {
     cms_payload_t *pl;
-    if ((msg->tag == CMS_SUBCRIBE_MESSAGE) || (msg->tag == CMS_UNSUBCRIBE_MESSAGE)) {
-        pl = get_payload_monitor_list(&head_monitor, msg->source);
+    if (msg->tag == CMS_RESPONSE_MESSAGE) {
+        pl = get_payload_monitor_list(head_monitor, msg->source);
         if (pl == NULL) {
             //store message in crash list 
             cms_payload_t *cms_payload_tmp = create_payload(msg->topic, msg->source, msg->data, client_name);
@@ -31,18 +33,8 @@ int cms_full_queue_handler(cms_msg_t *msg, mqd_t mqdes, char *client_name)
             pl->send_count++;
         }
         //check client crash
-        if ((pl->send_count >= max_msg) && ((strcmp(pl->source, msg->topic) + strcmp(pl->destination, msg->source) + strcmp(pl->data, msg->data)) == 0)) {
-            //client crashed
-            LOG_SERVER_STATE("Client is crashed \n");
-            if (delete_from_monitor(&head_monitor, pl->destination) == CMS_ERROR)
-                LOG_SERVER_STATE("delete node in crash list failed \n");
-            else 
-                LOG_SERVER_STATE("delete node in crash list successfully \n");
-            return CMS_ERROR;
-        } else {
-            //remove oldest message and add the new one
-            cms_msg_t *oldest_cms_msg;
-            if (mq_receive(mqdes, (char *)oldest_cms_msg, sizeof(cms_msg_t), NULL) == -1) {
+        int retvl = mq_receive(mqdes, (char *)oldest_cms_msg, sizeof(cms_msg_t), NULL);
+            if (retvl == -1) {
                 LOG_SERVER_STATE("Remove oldest message failed\n");
                 return CMS_ERROR;
             } else {
@@ -54,11 +46,27 @@ int cms_full_queue_handler(cms_msg_t *msg, mqd_t mqdes, char *client_name)
                     LOG_SERVER_STATE("Overwrite message successfully\n");
                 }
             }
+        if ((pl->send_count >= max_msg) && 
+            strcmp(pl->topic, oldest_cms_msg->topic) == 0 && 
+            strcmp(pl->source, oldest_cms_msg->source)== 0 && 
+            strcmp(pl->data, oldest_cms_msg->data) == 0) {
+            //client crashed
+            LOG_SERVER_STATE("Client is crashed \n");
+            if (delete_from_monitor(&head_monitor, pl->client_name) == CMS_ERROR){
+                LOG_SERVER_STATE("delete node in crash list failed \n");
+            }
+            else{ 
+                printf("[SERVER] delete client :%s\n",oldest_cms_msg->source);
+                LOG_SERVER_STATE("delete node in crash list successfully \n");
+                
+            }
+            //free(oldest_cms_msg);
+            return CMS_ERROR;
         }
     } else if ((msg->tag == CMS_REQUEST_SEND_MESSAGE) || (msg->tag == CMS_REQUEST_SEND_TO_MESSAGE)) {
         print_monitor_list(head_monitor);
-        pl = get_payload_monitor_list(&head_monitor, msg->topic);
-        //printf(" %s %s %s %s %s %s\n", pl->source, msg->topic, pl->destination, msg->source, pl->data, msg->data);
+        pl = get_payload_monitor_list(head_monitor, client_name);
+        
         if (pl == NULL) {
             //store message in crash list 
             cms_payload_t *cms_payload_tmp = create_payload(msg->source, msg->topic, msg->data, client_name);
@@ -67,40 +75,14 @@ int cms_full_queue_handler(cms_msg_t *msg, mqd_t mqdes, char *client_name)
                 return CMS_ERROR;
             } else {
                 LOG_SERVER_STATE("add message to crash list successfully \n");
-                printf("%s %s %s\n", msg->topic, msg->source, msg->data);
+                // printf("%s %s %s\n", msg->topic, msg->source, msg->data);
             } 
         } else {
             pl->send_count++;
         }
-        //check client crash
-        if ((pl != NULL) && (pl->send_count >= max_msg) && ((strcmp(pl->source, msg->source) + strcmp(pl->destination, msg->topic) + strcmp(pl->data, msg->data)) == 0)) {
-            //client crashed
-            LOG_SERVER_STATE("Client is crashed\n");
-            char name_crash[64];
-            strcpy(name_crash, pl->client_name);
-            printf("%s", pl->destination);
-            if (delete_from_monitor(&head_monitor, pl->destination) == CMS_ERROR)
-                LOG_SERVER_STATE("delete node in crash list failed \n");
-            else 
-                LOG_SERVER_STATE("delete node in crash list successfully \n");
-            int index_gr[get_length_list(head_client)];
-            int i, ret = 0;
-            int num1 = get_index_by_name(head_client, name_crash, index_gr);
-            for (i = 0; i < num1; i++)
-            {
-                ret += delete_client(&head_client, index_gr[i]);
-            }
-            if (ret == CMS_SUCCESS) {
-                LOG_SERVER_STATE("Delete crashed client successfully\n");
-                print_list(head_client);
-            } else {
-                LOG_SERVER_STATE("Delete crashed client failed\n");
-            }
-            return CMS_ERROR;
-        } else {
-            //remove oldest message and add the new one
-            cms_msg_t *oldest_cms_msg;
-            if (mq_receive(mqdes, (char *)oldest_cms_msg, sizeof(cms_msg_t), NULL) == -1) {
+        int retvl = mq_receive(mqdes, (char *)oldest_cms_msg, sizeof(cms_msg_t), NULL);
+            if (retvl == -1) {
+                LOG_SERVER_INT(errno);
                 LOG_SERVER_STATE("Remove oldest message failed\n");
                 return CMS_ERROR;
             } else {
@@ -112,8 +94,43 @@ int cms_full_queue_handler(cms_msg_t *msg, mqd_t mqdes, char *client_name)
                     LOG_SERVER_STATE("Overwrite message successfully\n");
                 }
             }
-        }
-    } else if (msg->tag == CMS_RESPONSE_MESSAGE) {
+        if ((pl != NULL) && (pl->send_count >= max_msg) && 
+            strcmp(pl->source, oldest_cms_msg->source)==0 &&
+             strcmp(pl->topic, oldest_cms_msg->topic)== 0 && 
+             strcmp(pl->data, oldest_cms_msg->data) == 0) {
+            //client crashed
+            LOG_SERVER_STATE("Client is crashed\n");
+            char name_crash[64];
+            strcpy(name_crash, pl->client_name);
+            //printf("%s", pl->destination);
+            if (delete_from_monitor(&head_monitor,client_name) == CMS_ERROR){
+                LOG_SERVER_STATE("delete node in crash list failed \n");
+            }
+            else 
+            {   
+                printf("[SERVER] delete client :%s\n",oldest_cms_msg->topic);
+                LOG_SERVER_STATE("delete node in crash list successfully \n");
+            }
+            int index_gr[get_length_list(head_client)];
+            int i, ret = 0;
+            int num1 = get_index_by_name(head_client, name_crash, index_gr);
+            for (i = num1 -1; i >=0 ; i--)
+            {
+                ret += delete_client(&head_client, index_gr[i]);
+            }
+            if (ret == CMS_SUCCESS) {
+                LOG_SERVER_STATE("Delete crashed client successfully\n");
+                mq_unlink(name_crash);
+                print_list(head_client);
+                return CMS_SUCCESS;
+            } else {
+                LOG_SERVER_STATE("Delete crashed client failed\n");
+                return CMS_ERROR;
+            }
+            //free(oldest_cms_msg);
+            
+        } 
+    } else if ((msg->tag == CMS_SUBCRIBE_MESSAGE) || (msg->tag == CMS_UNSUBCRIBE_MESSAGE)) {
         // handle response message
     }
     return CMS_SUCCESS;
@@ -121,9 +138,11 @@ int cms_full_queue_handler(cms_msg_t *msg, mqd_t mqdes, char *client_name)
 
 int cms_server_send(cms_msg_t *msg, mqd_t mqdes, char *client_name)
 {
-    if (mq_send(mqdes, (char*) msg, sizeof(cms_msg_t), 0) == CMS_ERROR) {
+    int ret = mq_send(mqdes, (char*) msg, sizeof(cms_msg_t), 0);
+    // printf("Send ret: %d\n",ret);
+    if (ret == CMS_ERROR) {
         LOG_SERVER_STATE("Error sending message\n");
-        printf("%d\n", errno);
+        // printf("%d\n", errno);
         if (errno == EAGAIN) {
             //Handle queue full
             LOG_SERVER_STATE("Message queue is full\n");
@@ -132,13 +151,33 @@ int cms_server_send(cms_msg_t *msg, mqd_t mqdes, char *client_name)
         } else if (errno == EMSGSIZE) {
             //Message size reach limit
             LOG_SERVER_STATE("The message size exceeds the limit \n");
-        } else {
-            //Other error, resend message
+            return CMS_ERROR;
+        }else{
             if (mq_send(mqdes, (char *) msg, sizeof(cms_msg_t), 0) == CMS_ERROR) {
                 LOG_SERVER_STATE("Resend message failed\n");
                 return CMS_ERROR;
             } else {
                 LOG_SERVER_STATE("Resend message successful\n");
+                return CMS_SUCCESS;
+            }
+        }
+    } else {
+        // printf("%s %s %s\n", msg->topic, msg->source, msg->data);
+        // printf("Send message successfully %s %s %s\n", msg->topic, msg->source, msg->data);
+        LOG_SERVER_STATE("Send message successfully\n");
+        // LOG_SERVER(msg->topic);
+        // LOG_SERVER(msg->source);
+        // LOG_SERVER(msg->data);
+        // LOG_SERVER_INT(msg->tag);
+        // remove node in crash list
+        if(head_monitor != NULL){
+            cms_payload_t *pl = get_payload_monitor_list(head_monitor, client_name);
+            if (pl != NULL) {
+                LOG_SERVER_STATE("remove node in crash list\n");
+                if (delete_from_monitor(&head_monitor, client_name) == CMS_ERROR)
+                    LOG_SERVER_STATE("delete node in crash list failed \n");
+                else 
+                    LOG_SERVER_STATE("delete node in crash list successfully \n");
             }
         }
     }
@@ -168,8 +207,18 @@ void cms_msg_handler(cms_msg_t *msg)
     switch(msg->tag)
     {
         case (CMS_SUBCRIBE_MESSAGE):
-            if (num_topic == max_topic) {
+        {
+            num_topic = count_topic(head_client);
+            printf("NUMBER TOPIC %d\n",num_topic);
+            if (num_topic >= max_topic) {
                 LOG_SERVER_STATE("Reach maximum topic. Can not subcribe more!\n");
+                mqd_tmp = mq_open(msg->source, O_RDWR | O_NONBLOCK);
+                cms_msg_resp = cms_server_create_message(CMS_RESPONSE_MESSAGE, msg->source, msg->topic, CMS_SUBCRIBE_FAIL);
+                cms_server_send(&cms_msg_resp, mqd_tmp, msg->source);
+                mq_close(mqd_tmp);
+                print_list(head_client);
+                num_topic = count_topic(head_client);
+                printf("NUMBER TOPIC %d\n",num_topic);
                 break;
             }
             data_tmp = create_data(msg->source, msg->topic);
@@ -193,12 +242,13 @@ void cms_msg_handler(cms_msg_t *msg)
             mq_close(mqd_tmp);
             print_list(head_client);
             break;
+        }
         case (CMS_UNSUBCRIBE_MESSAGE):
             mqd_tmp = mq_open(msg->source, O_RDWR | O_NONBLOCK);
             if (strcmp(msg->topic, "ALL") == 0) {
                 //UNSUBCRIBE ALL
                 num_member = get_index_by_name(head_client, msg->source, index_gr);
-                for (i = 0; i < num_member; i++)
+                for (i = num_member-1; i >= 0; i--)
                 {
                     ret += delete_client(&head_client, index_gr[i]);
                 }
@@ -231,7 +281,7 @@ void cms_msg_handler(cms_msg_t *msg)
         case (CMS_REQUEST_SEND_MESSAGE): 
             if (strcmp(msg->topic, "ALL") == 0) {
                 //SEND ALL
-                for(i = 0; i < length_list; i++)
+                for(i = length_list; i >= 0; i--)
                 {
                     data_tmp = get_data_by_index(head_client, i);
                     //doesn't send to yourself
@@ -245,17 +295,18 @@ void cms_msg_handler(cms_msg_t *msg)
                 // SEND TOPIC
                 num_member = get_index_by_topic(head_client, msg->topic, index_gr);
                 if (num_member == CMS_ERROR) {
-                    LOG_SERVER_STATE("ERROR: NOT FOUND ANY CLIENT IN THIS TOPIC!\n");
+                    //LOG_SERVER_STATE("ERROR: NOT FOUND ANY CLIENT IN THIS TOPIC!\n");
                     break;
                 }
-                for (i = 0; i < num_member; i++) 
+                for (i = num_member -1; i >= 0; i--) 
                 {
-                    data_tmp = get_data_by_index(head_client, i);
+                    data_tmp = get_data_by_index(head_client, index_gr[i]);
                     //doesn't send to yourself
                     if (strcmp(data_tmp->client_name, msg->source) == 0) continue;
                     //open client queue and send message
                     mqd_tmp = mq_open(data_tmp->client_name, O_RDWR | O_NONBLOCK);
                     ret += cms_server_send(msg, mqd_tmp, data_tmp->client_name);
+                    // printf("Message gui thu: %s %s %s\n" , msg->source, msg->topic, msg->data);
                     mq_close(mqd_tmp);
                 }
             }
@@ -272,6 +323,8 @@ void cms_msg_handler(cms_msg_t *msg)
                 LOG_SERVER_STATE("Server forwarded request send message failed\n");
             mq_close(mqd_tmp);
             break;
+        case (CMS_RESPONSE_MESSAGE):
+            LOG_SERVER(msg->data);
         default:
             break;
     }
@@ -280,6 +333,7 @@ void cms_msg_handler(cms_msg_t *msg)
 mqd_t cms_server_init()
 {
     struct mq_attr *attr = (struct mq_attr *)malloc(sizeof(struct mq_attr));
+    oldest_cms_msg = (cms_msg_t *)malloc(sizeof(cms_msg_t));
     char line[MAX_LINE_LENGTH];
     FILE *file = fopen("cms_server.conf", "r");
     if (file == NULL) {
@@ -303,9 +357,9 @@ mqd_t cms_server_init()
         if (sscanf(line, "mq_msgsize: %ld", &attr->mq_msgsize) == 1) continue;
         if (sscanf(line, "max_topic: %d", &max_topic) == 1) continue;
     }
-    printf("%d\n", sizeof(cms_msg_t));
     printf("%ld\n", attr->mq_msgsize);
     printf("%ld\n", attr->mq_maxmsg);
+    printf("WHY NOT RUN\n");
     // attr->mq_maxmsg = 10;
     // attr->mq_msgsize = sizeof(cms_msg_t);
     fclose(file);
@@ -321,11 +375,13 @@ mqd_t cms_server_init()
 
 void cms_server_start(mqd_t mqdes)
 {
-    cms_msg_t *cms_msg_recv;
+    cms_msg_t cms_msg_recv;
     int count_err = 0;
+    
     while (1)
     {
-        int rcv = mq_receive(mqdes, (char *)cms_msg_recv, sizeof(cms_msg_t), NULL);
+        usleep(100);
+        int rcv = mq_receive(mqdes, (char *)&cms_msg_recv, sizeof(cms_msg_t), NULL);
         if (rcv == CMS_ERROR) {
             //printf("Error receiving message from server queue \n");
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -333,7 +389,7 @@ void cms_server_start(mqd_t mqdes)
             } else {
                 //Other error
                 LOG_SERVER_STATE("Error receiving message from server queue\n");
-                printf("errno: %d\n", errno);
+                // printf("errno: %d\n", errno);
                 count_err ++;
                 if (count_err > 3) {
                     LOG_SERVER_STATE("While reading, too many errors happened in the same time. Stop server \n");
@@ -342,7 +398,13 @@ void cms_server_start(mqd_t mqdes)
             }
         } else {
             count_err = 0;
-            cms_msg_handler(cms_msg_recv);
+            count_send++;
+            // LOG_SERVER_INT(rcv);
+            // LOG_SERVER_INT(errno);
+            if((count_send-3)%1200==0){
+            printf("[SERVER] number message read : %lld data : %s \n", count_send,cms_msg_recv.data);
+            }
+            cms_msg_handler(&cms_msg_recv);
         }
     }
 }
@@ -351,9 +413,11 @@ void cms_server_stop()
 {
     free_list(&head_client);
     free_monitor_list(&head_monitor);
+    free(oldest_cms_msg);
     mq_close(mqd);
+    //mq_close(SERVER_QUEUE_NAME);
     mq_unlink(SERVER_QUEUE_NAME);
-    LOG_SERVER_STATE("Finished closing cms server\n");
+    printf("[SERVER] Finished closing cms server\n");
     exit(EXIT_SUCCESS);
 }
 

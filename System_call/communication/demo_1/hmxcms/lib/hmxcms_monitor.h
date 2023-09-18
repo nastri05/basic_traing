@@ -12,21 +12,21 @@
 #define CMS_SUCCESS     0
 #define CMS_ERROR       -1
 
-#define DEBUG_LIST
-#ifdef DEBUG_LIST
+#define DEBUG_LIST_VUONG
+#ifdef DEBUG_LIST_VUONG
 #define STR(x)   #x
-#define LOG(x) printf("[LIST] [%s]         %s = %s\n",__FUNCTION__,STR(x),x)
-#define LOG_INT(x) printf("[LIST] [%s]         %s = %d\n",__FUNCTION__,STR(x),x)
-#define LOG_STATE(x) printf("[LIST] [%s]   %s",__FUNCTION__, x)
+#define LOG_MONITOR(x) printf("[LIST] [%s]         %s = %s\n",__FUNCTION__,STR(x),x)
+#define LOG_MONITOR_INT(x) printf("[LIST] [%s]         %s = %d\n",__FUNCTION__,STR(x),x)
+#define LOG_MONITOR_STATE(x) printf("[LIST] [%s]   %s",__FUNCTION__, x)
 #else
-#define LOG(x)
-#define LOG_INT(x)
-#define LOG_STATE(x)
+#define LOG_MONITOR(x)
+#define LOG_MONITOR_INT(x)
+#define LOG_MONITOR_STATE(x)
 #endif
 
 typedef struct cms_payload_t{
     char source[MAX_NAME_LENGTH];
-    char destination[MAX_NAME_LENGTH];
+    char topic[MAX_NAME_LENGTH];
     char data[MAX_DATA_LENGTH];
     char client_name[MAX_NAME_LENGTH];
     int send_count;
@@ -68,7 +68,7 @@ int delete_from_monitor(cms_monitor_info_t **head_monitor_list, char* destinatio
 * \param destination is client that we want to get payload
 * \return payload if destination existed in monitor list, else NULL
 */
-cms_payload_t* get_payload_monitor_list(cms_monitor_info_t **head_monitor_list, char *destination);
+cms_payload_t* get_payload_monitor_list(cms_monitor_info_t *head_monitor_list, char *destination);
 /**
 * \brief Free monitor list that store send failed message
 * \param head_monitor_list is head of linked list store send failed message.

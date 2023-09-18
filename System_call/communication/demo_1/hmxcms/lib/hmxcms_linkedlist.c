@@ -165,9 +165,9 @@ int get_index_by_topic(cms_client_t *head_client, char *topic, int *result){
         index++;
     }
     if(size_arr == 0) {
-        LOG_STATE("---------------------------------\n");
-        LOG_STATE("Not found topic in list \n");
-        LOG_STATE("---------------------------------\n");
+        // LOG_STATE("---------------------------------\n");
+        // LOG_STATE("Not found topic in list \n");
+        // LOG_STATE("---------------------------------\n");
         return CMS_ERROR;
     }
     return size_arr;
@@ -317,13 +317,13 @@ void print_list( cms_client_t *head_client){
 int count_topic( cms_client_t *head_client){
     
     int length_list = get_length_list(head_client); 
-    LOG_INT(length_list);
     if(length_list == 0){
         return length_list;
     }
     int i;
     cms_client_t * tmp = head_client;
     char topic[length_list][MAX_NAME_LENGTH];
+    memset(topic, '\0', sizeof(topic));
     int count_topic= 0;
     for(i = 0 ; i <length_list; i++){
         int j;
@@ -346,8 +346,16 @@ int count_topic( cms_client_t *head_client){
 // int main(){
 //     cms_client_t *list_client = NULL;
 //     print_list(list_client);
+//     int i;
+//     for(i =0; i <1000; i++){
+//         char data_client[32];
+//         sprintf(data_client,"wan %d",i);
+//         cms_data_t *data = create_data("hoangtuan",data_client);
+//         add_client(&list_client,data);
+//     }
+//     LOG_CLIENT_INT(count_topic(list_client));
 //     free_list(&list_client);
-    
+// }    
 //     cms_data_t *data = create_data("hoangtuan","wan");
 //     int result = add_client(&list_client,data);
 //     // print_list(list_client);
