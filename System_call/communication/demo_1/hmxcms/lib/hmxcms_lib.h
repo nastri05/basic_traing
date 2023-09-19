@@ -12,7 +12,7 @@
 #include <limits.h>
 #include <string.h>
 
-#define DEBUG_LIB
+#undef DEBUG_LIB
 
 #ifdef DEBUG_LIB
 #define STR(x)   #x
@@ -107,7 +107,7 @@ void cms_client_close(const cms_client_infor * my_client);
  * \param data data of message
  * \return CMS_FAIL/CMS_SUCCESS/CMS_ERROR
 */
-int cms_send(const cms_client_infor * my_client, char * topic, char * data);
+int cms_client_send(const cms_client_infor * my_client, char * topic, char * data);
 
 /**
  * \brief Receive cms message
@@ -116,7 +116,7 @@ int cms_send(const cms_client_infor * my_client, char * topic, char * data);
  * \param data cms received message
  * \return CMS_ERROR/CMS_SUCCESS/CMS_FAIL
 */
-int cms_send_to(const cms_client_infor * my_client, char * destination, char* data);
+int cms_client_send_to(const cms_client_infor * my_client, char * destination, char* data);
 
 /**
  * \brief Receive cms message to server
@@ -124,7 +124,7 @@ int cms_send_to(const cms_client_infor * my_client, char * destination, char* da
  * \param message cms received message
  * \return length_message/CMS_ERROR
 */
-int cms_receive(const cms_client_infor * my_client, cms_msg_t* message);
+int cms_client_receive(const cms_client_infor * my_client, cms_msg_t* message);
 
 /**
  * \brief Set message queue attributes

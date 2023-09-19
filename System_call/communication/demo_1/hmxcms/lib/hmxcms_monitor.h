@@ -12,7 +12,7 @@
 #define CMS_SUCCESS     0
 #define CMS_ERROR       -1
 
-#define DEBUG_LIST_VUONG
+#undef DEBUG_LIST_VUONG
 #ifdef DEBUG_LIST_VUONG
 #define STR(x)   #x
 #define LOG_MONITOR(x) printf("[LIST] [%s]         %s = %s\n",__FUNCTION__,STR(x),x)

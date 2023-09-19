@@ -16,7 +16,7 @@ int main ()
     {
         /* code */
         cms_msg_t * message = (cms_msg_t*) malloc(sizeof(cms_msg_t));
-        result = cms_receive(my_mq,message);
+        result = cms_client_receive(my_mq,message);
         free(message);
         LOG_CLIENT_INT(result);
         if(result == CMS_ERROR){

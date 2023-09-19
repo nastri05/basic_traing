@@ -18,7 +18,7 @@ int main ()
     {
         /* code */
         cms_msg_t * message = (cms_msg_t*) malloc(sizeof(cms_msg_t));
-        result = cms_receive(my_mq,message);
+        result = cms_client_receive(my_mq,message);
         LOG_CLIENT_INT(count_message_reveice);
         count_message_reveice++;
         if(count_message_reveice%600==0){

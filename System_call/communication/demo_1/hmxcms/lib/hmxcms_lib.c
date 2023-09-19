@@ -24,7 +24,7 @@ void cms_client_close(const cms_client_infor * my_client){
     mq_unlink(my_client->client_name);
 }
 
-int cms_send_to(const cms_client_infor * my_client, char * destination, char* data){
+int cms_client_send_to(const cms_client_infor * my_client, char * destination, char* data){
     struct cms_msg_t msg = cms_create_message(CMS_REQUEST_SEND_TO_MESSAGE, my_client->client_name, destination, data);
     mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
     if(mqserver == CMS_ERROR){
@@ -44,7 +44,7 @@ int cms_send_to(const cms_client_infor * my_client, char * destination, char* da
     return CMS_SUCCESS;
 }
 
-int cms_send(const cms_client_infor * my_client, char * topic, char * data){
+int cms_client_send(const cms_client_infor * my_client, char * topic, char * data){
     struct cms_msg_t msg = cms_create_message(CMS_REQUEST_SEND_MESSAGE, my_client->client_name, topic, data);
     mqd_t mqserver = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
     if(mqserver == CMS_ERROR){
@@ -81,7 +81,7 @@ int cms_subcribe_topic(const cms_client_infor * my_client, char * topic){
     mq_close(mqserver);
     cms_msg_t respone;
     while(1){
-    int result = cms_receive(my_client,&respone);
+    int result = cms_client_receive(my_client,&respone);
     if(result == CMS_ERROR){
         return CMS_ERROR;
     }
@@ -114,7 +114,7 @@ int cms_unsubcribe_topic(const cms_client_infor * my_client, char * topic){
     mq_close(mqserver);
     cms_msg_t respone;
     while(1){
-    int result = cms_receive(my_client,&respone);
+    int result = cms_client_receive(my_client,&respone);
     if(respone.tag == CMS_RESPONSE_MESSAGE){
         if(strcmp(respone.data,CMS_UNSUBCRIBE_SUCCESS)==0){
             LOG_CLIENT_STATE("UNUBCRIBE SUCCESS\n");
@@ -128,7 +128,7 @@ int cms_unsubcribe_topic(const cms_client_infor * my_client, char * topic){
 }
 
 
-int cms_receive(const cms_client_infor * my_client, cms_msg_t* message){
+int cms_client_receive(const cms_client_infor * my_client, cms_msg_t* message){
     int ret;
     char result_send[MAX_NAME_LENGTH];
     while(1){

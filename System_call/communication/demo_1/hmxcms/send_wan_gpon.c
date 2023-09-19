@@ -23,12 +23,12 @@ int main ()
             // for(i = 0 ;i <20;i++){
                 char str[32];
                 sprintf(str,"%d",j);
-                int result = cms_send(my_mq, "wan", str);
+                int result = cms_client_send(my_mq, "wan", str);
                 
                 if(result == CMS_ERROR || result == CMS_FAIL){
                         count_error++;
                     }
-                result = cms_send(my_mq, "gpon", str);
+                result = cms_client_send(my_mq, "gpon", str);
                 
                 if(result == CMS_ERROR || result == CMS_FAIL){
                         count_error++;

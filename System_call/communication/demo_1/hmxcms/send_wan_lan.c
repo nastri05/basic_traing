@@ -20,12 +20,12 @@ int main ()
         {
                 char str[32];
                 sprintf(str,"%d",j);
-                int result = cms_send(my_mq, "HMX2130X_WAN", str);
+                int result = cms_client_send(my_mq, "HMX2130X_WAN", str);
                 
                 if(result == CMS_ERROR || result == CMS_FAIL){
                         count_error++;
                     }
-                result = cms_send_to(my_mq, HMX_CLIENT_4, str);
+                result = cms_client_send_to(my_mq, HMX_CLIENT_4, str);
                 
                 if(result == CMS_ERROR || result == CMS_FAIL){
                         count_error++;
