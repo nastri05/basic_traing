@@ -16,26 +16,26 @@ int add_to_monitor(cms_monitor_info_t **head_monitor_list, cms_payload_t* payloa
     new_client_monitored->next=NULL;
 
     if (new_client_monitored == NULL){
-        LOG_MONITOR_STATE("---------------------------------\n");
-        LOG_MONITOR_STATE("Create list of clients for monitoring failed \n");
-        LOG_MONITOR_STATE("---------------------------------\n");
+        // CMS_DEBUG_LOG("---------------------------------\n");
+        CMS_ERROR_LOG("Create clients %s for monitoring failed \n",payload->client_name);
+        // CMS_DEBUG_LOG("---------------------------------\n");
         return CMS_ERROR;        
     }
     cms_monitor_info_t *tmp = *head_monitor_list;
     if(*head_monitor_list == NULL){
         *head_monitor_list = new_client_monitored;
-        LOG_MONITOR_STATE("---------------------------------\n");
-        LOG_MONITOR_STATE("Add client to monitor list success \n");
-        LOG_MONITOR_STATE("---------------------------------\n");
+        // CMS_DEBUG_LOG("---------------------------------\n");
+        CMS_INFO_LOG("Add client %s to monitor list success \n",payload->client_name);
+        // CMS_DEBUG_LOG("---------------------------------\n");
         return CMS_SUCCESS;
     }
     while(tmp->next != NULL){
         tmp = tmp->next;
     }
     tmp->next= new_client_monitored;
-    LOG_MONITOR_STATE("---------------------------------\n");
-    LOG_MONITOR_STATE("Add client to monitor list success \n");
-    LOG_MONITOR_STATE("---------------------------------\n");
+    // CMS_DEBUG_LOG("---------------------------------\n");
+    CMS_INFO_LOG("Add client %s to monitor list success \n",payload->client_name);
+    // CMS_DEBUG_LOG("---------------------------------\n");
     return CMS_SUCCESS;    
 }
 

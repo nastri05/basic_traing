@@ -3,22 +3,8 @@
 #include<stdio.h>
 #include <string.h>
 #include "hmxcms_lib.h"
+#include"hmxcms_log.h"
 // #define MAX_NAME_LENGTH 32
-
-#define CMS_SUCCESS     0
-#define CMS_ERROR       -1
-
-#undef DEBUG_LIST
-#ifdef DEBUG_LIST
-#define STR(x)   #x
-#define LOG(x) printf("[LIST] [%s]         %s = %s\n",__FUNCTION__,STR(x),x)
-#define LOG_INT(x) printf("[LIST] [%s]         %s = %d\n",__FUNCTION__,STR(x),x)
-#define LOG_STATE(x) printf("[LIST] [%s]   %s",__FUNCTION__, x)
-#else
-#define LOG(x)
-#define LOG_INT(x)
-#define LOG_STATE(x)
-#endif
 
 typedef struct cms_data_t{
     char client_name[MAX_NAME_LENGTH];

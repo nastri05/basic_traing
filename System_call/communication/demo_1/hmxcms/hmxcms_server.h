@@ -9,13 +9,11 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "lib/hmxcms_linkedlist.h"
+#include "lib/hmxcms_lib.h"
 #include "lib/hmxcms_monitor.h"
-#include"lib/hmxcms_lib.h"
+#include "lib/hmxcms_log.h"
 
-#define MAX_LINE_LENGTH  100
-
-
-#define DEBUG_SERVER
+#undef DEBUG_SERVER
 #ifdef DEBUG_SERVER
 #define STR(x)   #x
 #define LOG_SERVER(x) printf("[SERVER] [%s]         %s = %s\n",__FUNCTION__,STR(x),x)
@@ -26,6 +24,7 @@
 #define LOG_SERVER_INT(x)
 #define LOG_SERVER_STATE(x)
 #endif
+
 
 /**
  * \brief Handle signal SIGINT
@@ -59,7 +58,7 @@ mqd_t cms_server_init();
  * \brief Start communication management server
  * \return nothing
  */
-void cms_server_start(mqd_t mqdes);
+void cms_server_start();
 
 /**
  * \brief Stop communication management server

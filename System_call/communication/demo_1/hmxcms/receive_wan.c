@@ -3,81 +3,40 @@
 
 int main ()
 {
-    struct mq_attr *mq_attr = cms_create_attr(0,10,sizeof(cms_msg_t));
-    cms_client_infor * my_mq = cms_client_init(mq_attr,HMX_CLIENT_2);
-    if(my_mq == NULL){
-        LOG_CLIENT_STATE("CAN'T INIT CLIENT");
-        free(mq_attr);
+
+    int result = cms_client_init(HMX_CLIENT_2);
+    if(result == CMS_FAIL|| result == CMS_ERROR  ){
+        LOG_CLIENT_STATE("CHAM HET\n");
         return 0;
     }
+    //LOG_CLIENT_STATE("Het nuoc cham\n");
+    result = cms_subcribe_topic("wan");
+    int i;
+    for(i = 0; i <105; i ++){
+            char str[32];
+            sprintf(str,"wan %d",i);
+            LOG_CLIENT(str);
+            int result = cms_subcribe_topic(str);
+            
+    }
 
-    int result = cms_subcribe_topic(my_mq, "HMX2130X_WAN");
+    long long count_message_reveice = 0;
     while (1)
     {
         /* code */
         cms_msg_t * message = (cms_msg_t*) malloc(sizeof(cms_msg_t));
-        result = cms_client_receive(my_mq,message);
+        result = cms_client_receive(message);
+        count_message_reveice++;
+        if(count_message_reveice%600==0){
+        printf("[HMX_CLIENT_2] Number message received : %lld data message: %s \n",count_message_reveice, message->data);
+        }
         free(message);
-        LOG_CLIENT_INT(result);
         if(result == CMS_ERROR){
             break;
         }
         
     }
-    result = cms_unsubcribe_topic(my_mq, "HMX2130X_WAN");
-    cms_client_close(my_mq);
-    free(mq_attr);
-    free(my_mq);
+    result = cms_unsubcribe_topic("wan");
+    cms_client_close();
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-// #include "lib/hmxcms_lib.h"
-
-
-// int main ()
-// {
-
-//     struct mq_attr *mq_attr = cms_create_attr(0,10,sizeof(cms_msg_t));
-//     cms_client_infor * my_mq = cms_client_init(mq_attr,HMX_CLIENT_2);
-//     if(my_mq == NULL){
-//         LOG_CLIENT_STATE("CHAM HET\n");
-//         free(mq_attr);
-//         return 0;
-//     }
-//     //LOG_CLIENT_STATE("Het nuoc cham\n");
-//     int result = cms_subcribe_topic(my_mq, "wan");
-//     long long count_message_reveice = 0;
-//     while (1)
-//     {
-//         /* code */
-//         cms_msg_t * message = (cms_msg_t*) malloc(sizeof(cms_msg_t));
-//         result = cms_receive(my_mq,message);
-//         LOG_CLIENT_INT(count_message_reveice);
-//         count_message_reveice++;
-//         if(count_message_reveice%600==0){
-//         // printf("[HMX_CLIENT_2] Number message received : %lld data message: %s \n",count_message_reveice, message->data);
-//         }
-//         free(message);
-//         LOG_CLIENT_INT(result);
-//         if(result == CMS_ERROR){
-//             break;
-//         }
-        
-//     }
-//     cms_client_close(my_mq);
-//     free(mq_attr);
-//     free(my_mq);
-//     return 0;
-// }
